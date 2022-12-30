@@ -38,15 +38,14 @@ class UserResponse {
 
 @Resolver()
 export class UserResolver {
-  @Query(() => User, { nullable: true })
-  async me(@Ctx() { em, req }: MyContext) {
-    console.log(req.session);
-    if (!req.session.userId) {
-      return null;
-    }
-    const user = await em.findOne(User, {});
-    return user;
-  }
+  // @Query(() => User, { nullable: true })
+  // async me(@Ctx() { em, req }: MyContext) {
+  //   if (!req.session.userId) {
+  //     return null;
+  //   }
+  //   const user = await em.findOne(User, { _id: req.session.userId });
+  //   return user;
+  // }
   @Mutation(() => UserResponse)
   async register(
     @Arg("options") options: UsernamePasswordInput,
@@ -93,7 +92,7 @@ export class UserResolver {
       }
     }
 
-    console.log(user._id);
+    // req.session.userId = user._id;
 
     return { user };
   }
@@ -127,9 +126,7 @@ export class UserResolver {
       };
     }
 
-    console.log(user._id);
-
-    console.log(req.session);
+    // req.session!.userId = user._id;
 
     return { user };
   }

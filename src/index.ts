@@ -7,19 +7,18 @@ import { buildSchema } from "type-graphql";
 import { HelloResolver } from "./resolvers/hello";
 import { PostResolver } from "./resolvers/post";
 import { UserResolver } from "./resolvers/user";
-import { createClient } from "redis";
-import session from "express-session";
 import { __prod__, __secret__ } from "./constants";
 import { MyContext } from "./types";
-import connectRedis from "connect-redis";
-
-const RedisStore = connectRedis(session);
-
-// redis@v4
-const redisClient = createClient();
-redisClient.connect().catch(console.error);
 
 const main = async () => {
+  const session = require("express-session");
+  let RedisStore = require("connect-redis")(session);
+
+  // redis@v4
+  const { createClient } = require("redis");
+  let redisClient = createClient({ legacyMode: true });
+  redisClient.connect().catch(console.error);
+
   const orm = await MikroORM.init(mikroConfig);
   await orm.getMigrator().up();
 
@@ -61,7 +60,9 @@ const main = async () => {
 
   await apolloServer.start();
 
-  apolloServer.applyMiddleware({ app });
+  apolloServer.applyMiddleware({
+    app,
+  });
 
   app.listen(4000, () => {
     console.log("server listening on port 4000");
