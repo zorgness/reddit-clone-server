@@ -9,6 +9,7 @@ export class Post {
   @PrimaryKey()
   _id!: number;
 
+  // @Field decorator is used to expose properties
   @Field(() => String)
   @Property({ type: "date" })
   createdAt: Date = new Date();
