@@ -5,6 +5,7 @@ import express from "express";
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
 import { HelloResolver } from "./resolvers/hello";
+import { PostResolver } from "./resolvers/post";
 
 const main = async () => {
   const orm = await MikroORM.init(mikroConfig);
@@ -16,11 +17,14 @@ const main = async () => {
   //   res.send("hello world!");
   // });
 
+  const emFork = orm.em.fork();
+
   const apolloServer = new ApolloServer({
     schema: await buildSchema({
-      resolvers: [HelloResolver],
+      resolvers: [HelloResolver, PostResolver],
       validate: false,
     }),
+    context: () => ({ em: emFork }),
   });
 
   await apolloServer.start();
@@ -36,8 +40,8 @@ const main = async () => {
   // //   title: "second post",
   // // } as Post);
   // // await emFork.persistAndFlush(post);
-  // // const posts = await emFork.find(Post, {});
-  // // console.log(posts);
+  // const posts = await emFork.find(Post, {});
+  // console.log(posts);
 };
 
 main().catch((err) => console.error(err));
