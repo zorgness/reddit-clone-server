@@ -7,6 +7,17 @@ import { buildSchema } from "type-graphql";
 import { HelloResolver } from "./resolvers/hello";
 import { PostResolver } from "./resolvers/post";
 import { UserResolver } from "./resolvers/user";
+import { createClient } from "redis";
+import session from "express-session";
+import { __prod__, __secret__ } from "./constants";
+import { MyContext } from "./types";
+import connectRedis from "connect-redis";
+
+const RedisStore = connectRedis(session);
+
+// redis@v4
+const redisClient = createClient();
+redisClient.connect().catch(console.error);
 
 const main = async () => {
   const orm = await MikroORM.init(mikroConfig);
@@ -18,6 +29,26 @@ const main = async () => {
   //   res.send("hello world!");
   // });
 
+  app.use(
+    session({
+      name: "qid",
+      store: new RedisStore({
+        client: redisClient,
+        disableTouch: true,
+      }),
+      cookie: {
+        path: "/",
+        maxAge: 1000 * 60 * 60 * 24, // 24 hours
+        httpOnly: true,
+        sameSite: "lax", // csrf protection
+        secure: __prod__,
+      },
+      saveUninitialized: false,
+      secret: "dhfkdqsjhfkqjfkljqsfklq",
+      resave: false,
+    })
+  );
+
   const emFork = orm.em.fork();
 
   const apolloServer = new ApolloServer({
@@ -25,7 +56,7 @@ const main = async () => {
       resolvers: [HelloResolver, PostResolver, UserResolver],
       validate: false,
     }),
-    context: () => ({ em: emFork }),
+    context: ({ req, res }): MyContext => ({ em: emFork, req, res }),
   });
 
   await apolloServer.start();
