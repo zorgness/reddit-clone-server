@@ -27,5 +27,6 @@
   "include": ["./src/**/*.ts"],
   "experimentalDecorators": true,
   "emitDecoratorMetadata": true,
-  "esModuleInterop": true
+  "esModuleInterop": true,
+  "typeRoots": ["./typing-stubs", "./node_modules/@types"]
 }

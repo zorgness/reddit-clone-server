@@ -59,7 +59,7 @@ UserResponse = __decorate([
     (0, type_graphql_1.ObjectType)()
 ], UserResponse);
 let UserResolver = class UserResolver {
-    async register(options, { em }) {
+    async register(options, { em, req }) {
         if (options.username.length <= 2) {
             return {
                 errors: [
@@ -102,7 +102,7 @@ let UserResolver = class UserResolver {
         }
         return { user };
     }
-    async login(options, { em }) {
+    async login(options, { em, req }) {
         const user = await em.findOne(User_1.User, { username: options.username });
         if (!user) {
             return {
