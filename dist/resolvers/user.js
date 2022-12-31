@@ -60,10 +60,10 @@ UserResponse = __decorate([
 ], UserResponse);
 let UserResolver = class UserResolver {
     async me({ em, req }) {
+        console.log(req.session);
         if (!req.session.userId) {
             return null;
         }
-        console.log(req.session.userId);
         const user = await em.findOne(User_1.User, { _id: parseInt(req.session.userId) });
         return user;
     }

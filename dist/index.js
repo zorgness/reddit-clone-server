@@ -27,7 +27,7 @@ const main = async () => {
         await redisClient.connect().catch(console.error);
         let RedisStore = (0, connect_redis_1.default)(session);
         app.use(session({
-            name: "qid",
+            name: "QIDTOM",
             store: new RedisStore({
                 client: redisClient,
                 disableTouch: true,
@@ -35,7 +35,7 @@ const main = async () => {
             cookie: {
                 maxAge: 1000 * 60 * 60 * 24,
                 httpOnly: true,
-                sameSite: "lax",
+                sameSite: "none",
                 secure: true,
             },
             saveUninitialized: false,

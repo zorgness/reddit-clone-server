@@ -40,10 +40,11 @@ class UserResponse {
 export class UserResolver {
   @Query(() => User, { nullable: true })
   async me(@Ctx() { em, req }: MyContext) {
+    console.log(req.session);
     if (!req.session.userId) {
       return null;
     }
-    console.log(req.session.userId);
+
     const user = await em.findOne(User, { _id: parseInt(req.session.userId) });
     return user;
   }
