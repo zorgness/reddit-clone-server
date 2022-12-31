@@ -64,7 +64,7 @@ let UserResolver = class UserResolver {
         if (!req.session.userId) {
             return null;
         }
-        const user = await em.findOne(User_1.User, { _id: parseInt(req.session.userId) });
+        const user = await em.findOne(User_1.User, { _id: req.session.userId });
         return user;
     }
     async register(options, { em, req }) {
@@ -108,7 +108,7 @@ let UserResolver = class UserResolver {
                 };
             }
         }
-        req.session.userId = user._id.toString();
+        req.session.userId = user._id;
         return { user };
     }
     async login(options, { em, req }) {
@@ -134,7 +134,7 @@ let UserResolver = class UserResolver {
                 ],
             };
         }
-        req.session.userId = user._id.toString();
+        req.session.userId = user._id;
         return { user };
     }
 };

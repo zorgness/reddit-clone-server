@@ -8,10 +8,8 @@ import { HelloResolver } from "./resolvers/hello";
 import { PostResolver } from "./resolvers/post";
 import { UserResolver } from "./resolvers/user";
 import { __prod__ } from "./constants";
-// import { MyContext } from "./types";
 import { createClient } from "redis";
 import { ApolloServerPluginLandingPageGraphQLPlayground } from "apollo-server-core";
-// import session from "express-session";
 import connectRedis from "connect-redis";
 
 const main = async () => {

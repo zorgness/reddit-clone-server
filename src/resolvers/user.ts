@@ -45,7 +45,7 @@ export class UserResolver {
       return null;
     }
 
-    const user = await em.findOne(User, { _id: parseInt(req.session.userId) });
+    const user = await em.findOne(User, { _id: req.session.userId });
     return user;
   }
   @Mutation(() => UserResponse)
@@ -94,7 +94,7 @@ export class UserResolver {
       }
     }
 
-    req.session.userId = user._id.toString();
+    req.session.userId = user._id;
 
     return { user };
   }
@@ -127,7 +127,7 @@ export class UserResolver {
         ],
       };
     }
-    req.session.userId = user._id.toString();
+    req.session.userId = user._id;
 
     return { user };
   }
