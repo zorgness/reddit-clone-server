@@ -48,7 +48,7 @@ const main = async () => {
           secure: true,
         },
         saveUninitialized: false,
-        secret: "dhfkdqsjhfkqjfkljqsfklq",
+        secret: process.env.SESSION_SECRET,
         resave: false,
       })
     );
