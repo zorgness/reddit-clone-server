@@ -8,65 +8,97 @@ import { HelloResolver } from "./resolvers/hello";
 import { PostResolver } from "./resolvers/post";
 import { UserResolver } from "./resolvers/user";
 import { __prod__, __secret__ } from "./constants";
-import { MyContext } from "./types";
+// import { MyContext } from "./types";
+import { createClient } from "redis";
+import { ApolloServerPluginLandingPageGraphQLPlayground } from "apollo-server-core";
+// import session from "express-session";
+import connectRedis from "connect-redis";
 
 const main = async () => {
   const session = require("express-session");
-  let RedisStore = require("connect-redis")(session);
+  // // const redis = require("redis");
+  // const connectRedis = require("connect-redis");
 
-  // redis@v4
-  const { createClient } = require("redis");
-  let redisClient = createClient({ legacyMode: true });
-  redisClient.connect().catch(console.error);
+  // // redis@v4
+  // const { createClient } = require("redis");
+  // let redisClient = createClient({ legacyMode: true });
 
-  const orm = await MikroORM.init(mikroConfig);
-  await orm.getMigrator().up();
-
-  const app = express();
-
-  // app.get("/", (_, res) => {
-  //   res.send("hello world!");
+  //Configure redis client
+  // const RedisStore = await connectRedis(session);
+  // const redisClient = redis.createClient({
+  //   host: "localhost",
+  //   port: 6379,
   // });
+  try {
+    const orm = await MikroORM.init(mikroConfig);
+    await orm.getMigrator().up();
 
-  app.use(
-    session({
-      name: "qid",
-      store: new RedisStore({
-        client: redisClient,
-        disableTouch: true,
+    const app = express();
+    app.set("trust proxy", process.env.NODE_ENV !== "production");
+    app.set("Access-Control-Allow-Origin", "https://studio.apollographql.com");
+    app.set("Access-Control-Allow-Credentials", true);
+
+    const redisClient = createClient({ legacyMode: true });
+    await redisClient.connect().catch(console.error);
+    let RedisStore = connectRedis(session);
+
+    // app.get("/", (_, res) => {
+    //   res.send("hello world!");
+    // });
+
+    app.use(
+      session({
+        name: "qid",
+        store: new RedisStore({
+          client: redisClient as any,
+          disableTouch: true,
+        }),
+        cookie: {
+          maxAge: 1000 * 60 * 60 * 24, // 24 hours
+          httpOnly: true,
+          sameSite: "lax", // csrf protection
+          secure: true,
+        },
+        saveUninitialized: false,
+        secret: "dhfkdqsjhfkqjfkljqsfklq",
+        resave: false,
+      })
+    );
+
+    const emFork = orm.em.fork();
+
+    const apolloServer = new ApolloServer({
+      schema: await buildSchema({
+        resolvers: [HelloResolver, PostResolver, UserResolver],
+        validate: false,
       }),
-      cookie: {
-        path: "/",
-        maxAge: 1000 * 60 * 60 * 24, // 24 hours
-        httpOnly: true,
-        sameSite: "lax", // csrf protection
-        secure: __prod__,
-      },
-      saveUninitialized: false,
-      secret: "dhfkdqsjhfkqjfkljqsfklq",
-      resave: false,
-    })
-  );
+      plugins: [
+        ApolloServerPluginLandingPageGraphQLPlayground({
+          // options
+        }),
+      ],
+      context: ({ req, res }) => ({ em: emFork, req, res }),
+    });
 
-  const emFork = orm.em.fork();
+    const cors = {
+      // add for apollo studio
+      credentials: true,
+      origin: "https://studio.apollographql.com",
+    };
 
-  const apolloServer = new ApolloServer({
-    schema: await buildSchema({
-      resolvers: [HelloResolver, PostResolver, UserResolver],
-      validate: false,
-    }),
-    context: ({ req, res }): MyContext => ({ em: emFork, req, res }),
-  });
+    await apolloServer.start();
 
-  await apolloServer.start();
+    apolloServer.applyMiddleware({
+      app,
+      cors,
+    });
 
-  apolloServer.applyMiddleware({
-    app,
-  });
-
-  app.listen(4000, () => {
-    console.log("server listening on port 4000");
-  });
+    app.listen(4000, () => {
+      console.log("server listening on port 4000");
+    });
+  } catch (error) {
+    console.log(error, "ERRR");
+  }
 
   // const emFork = orm.em.fork();
   // // const post = await emFork.create(Post, {

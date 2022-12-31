@@ -11,48 +11,64 @@ const type_graphql_1 = require("type-graphql");
 const hello_1 = require("./resolvers/hello");
 const post_1 = require("./resolvers/post");
 const user_1 = require("./resolvers/user");
-const constants_1 = require("./constants");
+const redis_1 = require("redis");
+const apollo_server_core_1 = require("apollo-server-core");
+const connect_redis_1 = __importDefault(require("connect-redis"));
 const main = async () => {
     const session = require("express-session");
-    let RedisStore = require("connect-redis")(session);
-    const { createClient } = require("redis");
-    let redisClient = createClient({ legacyMode: true });
-    redisClient.connect().catch(console.error);
-    const orm = await postgresql_1.MikroORM.init(mikro_orm_config_1.default);
-    await orm.getMigrator().up();
-    const app = (0, express_1.default)();
-    app.use(session({
-        name: "qid",
-        store: new RedisStore({
-            client: redisClient,
-            disableTouch: true,
-        }),
-        cookie: {
-            path: "/",
-            maxAge: 1000 * 60 * 60 * 24,
-            httpOnly: true,
-            sameSite: "lax",
-            secure: constants_1.__prod__,
-        },
-        saveUninitialized: false,
-        secret: "dhfkdqsjhfkqjfkljqsfklq",
-        resave: false,
-    }));
-    const emFork = orm.em.fork();
-    const apolloServer = new apollo_server_express_1.ApolloServer({
-        schema: await (0, type_graphql_1.buildSchema)({
-            resolvers: [hello_1.HelloResolver, post_1.PostResolver, user_1.UserResolver],
-            validate: false,
-        }),
-        context: ({ req, res }) => ({ em: emFork, req, res }),
-    });
-    await apolloServer.start();
-    apolloServer.applyMiddleware({
-        app,
-    });
-    app.listen(4000, () => {
-        console.log("server listening on port 4000");
-    });
+    try {
+        const orm = await postgresql_1.MikroORM.init(mikro_orm_config_1.default);
+        await orm.getMigrator().up();
+        const app = (0, express_1.default)();
+        app.set("trust proxy", process.env.NODE_ENV !== "production");
+        app.set("Access-Control-Allow-Origin", "https://studio.apollographql.com");
+        app.set("Access-Control-Allow-Credentials", true);
+        const redisClient = (0, redis_1.createClient)({ legacyMode: true });
+        await redisClient.connect().catch(console.error);
+        let RedisStore = (0, connect_redis_1.default)(session);
+        app.use(session({
+            name: "qid",
+            store: new RedisStore({
+                client: redisClient,
+                disableTouch: true,
+            }),
+            cookie: {
+                maxAge: 1000 * 60 * 60 * 24,
+                httpOnly: true,
+                sameSite: "lax",
+                secure: true,
+            },
+            saveUninitialized: false,
+            secret: "dhfkdqsjhfkqjfkljqsfklq",
+            resave: false,
+        }));
+        const emFork = orm.em.fork();
+        const apolloServer = new apollo_server_express_1.ApolloServer({
+            schema: await (0, type_graphql_1.buildSchema)({
+                resolvers: [hello_1.HelloResolver, post_1.PostResolver, user_1.UserResolver],
+                validate: false,
+            }),
+            plugins: [
+                (0, apollo_server_core_1.ApolloServerPluginLandingPageGraphQLPlayground)({}),
+            ],
+            context: ({ req, res }) => ({ em: emFork, req, res }),
+        });
+        const cors = {
+            credentials: true,
+            origin: "https://studio.apollographql.com",
+        };
+        await apolloServer.start();
+        apolloServer.applyMiddleware({
+            app,
+            cors,
+        });
+        app.listen(4000, () => {
+            console.log("server listening on port 4000");
+        });
+    }
+    catch (error) {
+        console.log(error, "ERRR");
+    }
 };
 main().catch((err) => console.error(err));
 //# sourceMappingURL=index.js.map
