@@ -21,7 +21,7 @@ const main = async () => {
         await orm.getMigrator().up();
         const app = (0, express_1.default)();
         app.set("trust proxy", process.env.NODE_ENV !== "production");
-        app.set("Access-Control-Allow-Origin", "https://studio.apollographql.com");
+        app.set("Access-Control-Allow-Origin", "http://localhost:4000/graphql");
         app.set("Access-Control-Allow-Credentials", true);
         const redisClient = (0, redis_1.createClient)({ legacyMode: true });
         await redisClient.connect().catch(console.error);
@@ -49,13 +49,18 @@ const main = async () => {
                 validate: false,
             }),
             plugins: [
-                (0, apollo_server_core_1.ApolloServerPluginLandingPageGraphQLPlayground)({}),
+                (0, apollo_server_core_1.ApolloServerPluginLandingPageGraphQLPlayground)({
+                    settings: {
+                        "request.credentials": "include",
+                        "editor.reuseHeaders": false,
+                    },
+                }),
             ],
             context: ({ req, res }) => ({ em: emFork, req, res }),
         });
         const cors = {
             credentials: true,
-            origin: "https://studio.apollographql.com",
+            origin: "http://localhost:3000",
         };
         await apolloServer.start();
         apolloServer.applyMiddleware({
