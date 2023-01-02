@@ -11,6 +11,7 @@ import {
   Query,
 } from "type-graphql";
 import argon2 from "argon2";
+import { EntityManager } from "@mikro-orm/postgresql";
 
 @InputType()
 class UsernamePasswordInput {
@@ -68,25 +69,37 @@ export class UserResolver {
       return {
         errors: [
           {
-            field: "Password",
+            field: "password",
             message: "Password must be at least 4 characters long",
           },
         ],
       };
     }
     const hashedPassword = await argon2.hash(options.password);
-    const user = em.create(User, {
-      username: options.username,
-      password: hashedPassword,
-    } as User);
+    // const user = em.create(User, {
+    //   username: options.username,
+    //   password: hashedPassword,
+    // } as User);
+    let user;
     try {
-      await em.persistAndFlush(user);
+      const result = await (em as EntityManager)
+        .createQueryBuilder(User)
+        .getKnexQuery()
+        .insert({
+          username: options.username,
+          password: hashedPassword,
+          created_at: new Date(),
+          updated_at: new Date(),
+        })
+        .returning("*");
+      user = result[0];
+      // await em.persistAndFlush(user);
     } catch (err) {
       if (err.code === "23505" || err.detail.includes("already exists")) {
         return {
           errors: [
             {
-              field: "Username",
+              field: "username",
               message: "Username already exists",
             },
           ],
@@ -94,7 +107,12 @@ export class UserResolver {
       }
     }
 
+    // store user id session
+    // this will set a cookie on the user
+    // keep them logged in
+
     req.session.userId = user._id;
+    console.log(req.session);
 
     return { user };
   }

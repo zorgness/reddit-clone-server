@@ -11,6 +11,8 @@ import { __prod__ } from "./constants";
 import { createClient } from "redis";
 import { ApolloServerPluginLandingPageGraphQLPlayground } from "apollo-server-core";
 import connectRedis from "connect-redis";
+import cors from "cors";
+import Redis from "ioredis";
 
 const main = async () => {
   const session = require("express-session");
@@ -20,7 +22,7 @@ const main = async () => {
     await orm.getMigrator().up();
 
     const app = express();
-    app.set("trust proxy", process.env.NODE_ENV !== "production");
+    app.set("trust proxy", true);
     app.set("Access-Control-Allow-Origin", "http://localhost:4000/graphql");
     app.set("Access-Control-Allow-Credentials", true);
 
@@ -31,19 +33,25 @@ const main = async () => {
     // app.get("/", (_, res) => {
     //   res.send("hello world!");
     // });
+    const corsOptions = {
+      // add for apollo studio
+      origin: ["http://localhost:3000", "https://studio.apollographql.com"],
+      credentials: true,
+    };
 
+    app.use(cors(corsOptions));
     app.use(
       session({
-        name: "QIDTOM",
+        name: "qid",
         store: new RedisStore({
-          client: redisClient as any,
+          client: redisClient,
           disableTouch: true,
         }),
         cookie: {
           maxAge: 1000 * 60 * 60 * 24, // 24 hours
-          httpOnly: true,
-          sameSite: "none", // csrf protection
-          secure: true,
+          httpOnly: false,
+          sameSite: "lax", // csrf protection
+          secure: __prod__,
         },
         saveUninitialized: false,
         secret: process.env.SESSION_SECRET,
@@ -70,17 +78,11 @@ const main = async () => {
       context: ({ req, res }) => ({ em: emFork, req, res }),
     });
 
-    const cors = {
-      // add for apollo studio
-      credentials: true,
-      origin: "http://localhost:3000",
-    };
-
     await apolloServer.start();
 
     apolloServer.applyMiddleware({
       app,
-      cors,
+      cors: false,
     });
 
     app.listen(4000, () => {
