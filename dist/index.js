@@ -34,7 +34,7 @@ const main = async () => {
         };
         app.use((0, cors_1.default)(corsOptions));
         app.use(session({
-            name: "qid",
+            name: constants_1.COOKIE_NAME,
             store: new RedisStore({
                 client: redisClient,
                 disableTouch: true,
