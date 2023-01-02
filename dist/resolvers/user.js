@@ -151,10 +151,9 @@ let UserResolver = class UserResolver {
         return new Promise((resolve, reject) => req.session.destroy((err) => {
             res.clearCookie(constants_1.COOKIE_NAME);
             if (err) {
-                reject(new Error(err.message));
-                return;
+                return reject(err);
             }
-            resolve(true);
+            return resolve(true);
         }));
     }
 };
@@ -186,7 +185,7 @@ __decorate([
     __param(0, (0, type_graphql_1.Ctx)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "logout", null);
 UserResolver = __decorate([
     (0, type_graphql_1.Resolver)()

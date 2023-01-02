@@ -12,7 +12,6 @@ import { createClient } from "redis";
 import { ApolloServerPluginLandingPageGraphQLPlayground } from "apollo-server-core";
 import connectRedis from "connect-redis";
 import cors from "cors";
-import Redis from "ioredis";
 
 const main = async () => {
   const session = require("express-session");
