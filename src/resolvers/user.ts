@@ -8,7 +8,6 @@ import {
   Field,
   ObjectType,
   Query,
-  Args,
 } from "type-graphql";
 import argon2 from "argon2";
 import { EntityManager } from "@mikro-orm/postgresql";
