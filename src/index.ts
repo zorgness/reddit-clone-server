@@ -1,17 +1,17 @@
 import { MikroORM } from "@mikro-orm/postgresql";
 // import { Post } from "./entities/Post";
-import mikroConfig from "./mikro-orm.config";
-import express from "express";
+import { ApolloServerPluginLandingPageGraphQLPlayground } from "apollo-server-core";
 import { ApolloServer } from "apollo-server-express";
+import connectRedis from "connect-redis";
+import cors from "cors";
+import express from "express";
+import Redis from "ioredis";
 import { buildSchema } from "type-graphql";
+import { COOKIE_NAME, __prod__ } from "./constants";
+import mikroConfig from "./mikro-orm.config";
 import { HelloResolver } from "./resolvers/hello";
 import { PostResolver } from "./resolvers/post";
 import { UserResolver } from "./resolvers/user";
-import { COOKIE_NAME, __prod__ } from "./constants";
-import { createClient } from "redis";
-import { ApolloServerPluginLandingPageGraphQLPlayground } from "apollo-server-core";
-import connectRedis from "connect-redis";
-import cors from "cors";
 
 const main = async () => {
   const session = require("express-session");
@@ -21,17 +21,20 @@ const main = async () => {
     await orm.getMigrator().up();
 
     const app = express();
+    // const redisClient = createClient({ legacyMode: true });
+    let RedisStore = connectRedis(session);
+    // const redis = new Redis(process.env.REDIS_URL as string);
+    const redis = new Redis();
+    // await redis.connect().catch(console.error);
+
     app.set("trust proxy", true);
     app.set("Access-Control-Allow-Origin", "http://localhost:4000/graphql");
     app.set("Access-Control-Allow-Credentials", true);
 
-    const redisClient = createClient({ legacyMode: true });
-    await redisClient.connect().catch(console.error);
-    let RedisStore = connectRedis(session);
-
     // app.get("/", (_, res) => {
     //   res.send("hello world!");
     // });
+
     const corsOptions = {
       // add for apollo studio
       origin: ["http://localhost:3000", "https://studio.apollographql.com"],
@@ -43,7 +46,7 @@ const main = async () => {
       session({
         name: COOKIE_NAME,
         store: new RedisStore({
-          client: redisClient,
+          client: redis as any,
           disableTouch: true,
         }),
         cookie: {
@@ -74,7 +77,7 @@ const main = async () => {
         }),
       ],
 
-      context: ({ req, res }) => ({ em: emFork, req, res }),
+      context: ({ req, res }) => ({ em: emFork, req, res, redis }),
     });
 
     await apolloServer.start();
