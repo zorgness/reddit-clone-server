@@ -22,6 +22,8 @@ const argon2_1 = __importDefault(require("argon2"));
 const constants_1 = require("../constants");
 const UsernamePasswordInput_1 = require("./UsernamePasswordInput");
 const validateRegister_1 = require("../utils/validateRegister");
+const sendEmail_1 = require("../utils/sendEmail");
+const uuid_1 = require("uuid");
 let FieldError = class FieldError {
 };
 __decorate([
@@ -101,8 +103,8 @@ let UserResolver = class UserResolver {
             return {
                 errors: [
                     {
-                        field: "username",
-                        message: "could not find username",
+                        field: "usernameOrEmail",
+                        message: "could not find username or email",
                     },
                 ],
             };
@@ -129,6 +131,16 @@ let UserResolver = class UserResolver {
             }
             return resolve(true);
         }));
+    }
+    async forgotPassword(email, { em, redis }) {
+        const user = await em.findOne(User_1.User, { email });
+        if (!user) {
+            return true;
+        }
+        const token = (0, uuid_1.v4)();
+        await redis.set(constants_1.FORGET_PASSWORD_PREFIX + token, user._id, "EX", 1000 * 60 * 60 * 24 * 1);
+        await (0, sendEmail_1.sendEmail)(email, `<a href="http://localhost:3000/change-password/${token}">reset password</a>`);
+        return true;
     }
 };
 __decorate([
@@ -162,6 +174,14 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "logout", null);
+__decorate([
+    (0, type_graphql_1.Mutation)(() => Boolean),
+    __param(0, (0, type_graphql_1.Arg)("email")),
+    __param(1, (0, type_graphql_1.Ctx)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], UserResolver.prototype, "forgotPassword", null);
 UserResolver = __decorate([
     (0, type_graphql_1.Resolver)()
 ], UserResolver);
