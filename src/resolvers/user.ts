@@ -8,6 +8,7 @@ import {
   Field,
   ObjectType,
   Query,
+  Args,
 } from "type-graphql";
 import argon2 from "argon2";
 import { EntityManager } from "@mikro-orm/postgresql";
@@ -147,6 +148,54 @@ export class UserResolver {
         return resolve(true);
       })
     );
+  }
+
+  @Mutation(() => UserResponse)
+  async changePassword(
+    @Arg("token") token: string,
+    @Arg("newPassword") newPassword: string,
+    @Ctx() { redis, em, req }: MyContext
+  ): Promise<UserResponse> {
+    if (newPassword.length <= 2) {
+      return {
+        errors: [
+          {
+            field: "password",
+            message: "length must be greater than 2",
+          },
+        ],
+      };
+    }
+
+    const userId = await redis.get(FORGET_PASSWORD_PREFIX + token);
+    if (!userId) {
+      return {
+        errors: [
+          {
+            field: "token",
+            message: "token expired",
+          },
+        ],
+      };
+    }
+
+    const user = await em.findOne(User, { _id: parseInt(userId) });
+    if (!user) {
+      return {
+        errors: [
+          {
+            field: "token",
+            message: "user no longer exists",
+          },
+        ],
+      };
+    }
+
+    user.password = await argon2.hash(newPassword);
+    await em.persistAndFlush(user);
+    // log user after successful change password
+    req.session.userId = user._id;
+    return { user };
   }
 
   @Mutation(() => Boolean)

@@ -132,6 +132,44 @@ let UserResolver = class UserResolver {
             return resolve(true);
         }));
     }
+    async changePassword(token, newPassword, { redis, em, req }) {
+        if (newPassword.length <= 2) {
+            return {
+                errors: [
+                    {
+                        field: "password",
+                        message: "length must be greater than 2",
+                    },
+                ],
+            };
+        }
+        const userId = await redis.get(constants_1.FORGET_PASSWORD_PREFIX + token);
+        if (!userId) {
+            return {
+                errors: [
+                    {
+                        field: "token",
+                        message: "token expired",
+                    },
+                ],
+            };
+        }
+        const user = await em.findOne(User_1.User, { _id: parseInt(userId) });
+        if (!user) {
+            return {
+                errors: [
+                    {
+                        field: "token",
+                        message: "user no longer exists",
+                    },
+                ],
+            };
+        }
+        user.password = await argon2_1.default.hash(newPassword);
+        await em.persistAndFlush(user);
+        req.session.userId = user._id;
+        return { user };
+    }
     async forgotPassword(email, { em, redis }) {
         const user = await em.findOne(User_1.User, { email });
         if (!user) {
@@ -174,6 +212,15 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "logout", null);
+__decorate([
+    (0, type_graphql_1.Mutation)(() => UserResponse),
+    __param(0, (0, type_graphql_1.Arg)("token")),
+    __param(1, (0, type_graphql_1.Arg)("newPassword")),
+    __param(2, (0, type_graphql_1.Ctx)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, Object]),
+    __metadata("design:returntype", Promise)
+], UserResolver.prototype, "changePassword", null);
 __decorate([
     (0, type_graphql_1.Mutation)(() => Boolean),
     __param(0, (0, type_graphql_1.Arg)("email")),
