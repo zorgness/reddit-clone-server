@@ -1,5 +1,12 @@
-import { Entity, PrimaryKey, Property, OptionalProps } from "@mikro-orm/core";
+import {
+  Entity,
+  PrimaryKey,
+  Property,
+  OptionalProps,
+  ManyToOne,
+} from "@mikro-orm/core";
 import { Field, ObjectType, Int } from "type-graphql";
+import { User } from "./User";
 
 @ObjectType()
 @Entity()
@@ -22,7 +29,20 @@ export class Post {
   @Property({ type: "text" })
   title!: string;
 
-  constructor(title: string) {
+  @Field()
+  @Property()
+  text!: string;
+
+  @Field()
+  @Property()
+  creatorId: number;
+
+  // @Field()
+  // @ManyToOne(() => User, (user) => user.posts)
+  // creator: User;
+
+  constructor(title: string, text: string) {
     this.title = title;
+    this.text = text;
   }
 }
