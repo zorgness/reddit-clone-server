@@ -1,14 +1,18 @@
-import { MikroORM } from "@mikro-orm/postgresql";
 // import { Post } from "./entities/Post";
+import "reflect-metadata";
+import "dotenv-safe/config";
 import { ApolloServerPluginLandingPageGraphQLPlayground } from "apollo-server-core";
 import { ApolloServer } from "apollo-server-express";
 import connectRedis from "connect-redis";
 import cors from "cors";
 import express from "express";
 import Redis from "ioredis";
+import path from "path";
 import { buildSchema } from "type-graphql";
+import { createConnection } from "typeorm";
 import { COOKIE_NAME, __prod__ } from "./constants";
-import mikroConfig from "./mikro-orm.config";
+import { Post } from "./entities/Post";
+import { User } from "./entities/User";
 import { HelloResolver } from "./resolvers/hello";
 import { PostResolver } from "./resolvers/post";
 import { UserResolver } from "./resolvers/user";
@@ -17,15 +21,22 @@ const main = async () => {
   const session = require("express-session");
 
   try {
-    const orm = await MikroORM.init(mikroConfig);
-    await orm.getMigrator().up();
+    const conn = await createConnection({
+      type: "postgres",
+      database: "lireddit2",
+      username: "postgres",
+      password: "postgres",
+      migrations: [path.join(__dirname, "./migrations/*")],
+      logging: true,
+      synchronize: true,
+      entities: [Post, User],
+    });
 
     const app = express();
-    // const redisClient = createClient({ legacyMode: true });
+
     let RedisStore = connectRedis(session);
-    // const redis = new Redis(process.env.REDIS_URL as string);
+
     const redis = new Redis();
-    // await redis.connect().catch(console.error);
 
     app.set("trust proxy", true);
     app.set("Access-Control-Allow-Origin", "http://localhost:4000/graphql");
@@ -61,8 +72,6 @@ const main = async () => {
       })
     );
 
-    const emFork = orm.em.fork();
-
     const apolloServer = new ApolloServer({
       schema: await buildSchema({
         resolvers: [HelloResolver, PostResolver, UserResolver],
@@ -77,7 +86,7 @@ const main = async () => {
         }),
       ],
 
-      context: ({ req, res }) => ({ em: emFork, req, res, redis }),
+      context: ({ req, res }) => ({ req, res, redis }),
     });
 
     await apolloServer.start();

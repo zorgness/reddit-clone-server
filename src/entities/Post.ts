@@ -1,28 +1,45 @@
-import { Entity, PrimaryKey, Property, OptionalProps } from "@mikro-orm/core";
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  BaseEntity,
+} from "typeorm";
 import { Field, ObjectType, Int } from "type-graphql";
+// import { User } from "./User";
+
+// BaseEntity is an class abstraction to help run sql requests
 
 @ObjectType()
 @Entity()
-export class Post {
-  [OptionalProps]?: "title" | "updateAt" | "createdAt";
+export class Post extends BaseEntity {
   @Field(() => Int)
-  @PrimaryKey()
+  @PrimaryGeneratedColumn()
   _id!: number;
 
   // @Field decorator is used to expose properties
   @Field(() => String)
-  @Property({ type: "date" })
+  @CreateDateColumn()
   createdAt: Date = new Date();
 
   @Field(() => String)
-  @Property({ type: "date", onUpdate: () => new Date() })
+  @UpdateDateColumn()
   updatedAt: Date = new Date();
 
   @Field(() => String)
-  @Property({ type: "text" })
+  @Column()
   title!: string;
 
-  constructor(title: string) {
-    this.title = title;
-  }
+  @Field()
+  @Column()
+  text!: string;
+
+  @Field()
+  @Column()
+  creatorId: number;
+
+  // @Field()
+  // @ManyToOne(() => User, (user) => user.posts)
+  // creator: User;
 }
