@@ -1,39 +1,39 @@
+import { Field, ObjectType, Int } from "type-graphql";
 import {
   Entity,
-  PrimaryKey,
-  Property,
-  OptionalProps,
-  OneToMany,
-} from "@mikro-orm/core";
-import { Field, ObjectType, Int } from "type-graphql";
-import { Post } from "./Post";
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  BaseEntity,
+} from "typeorm";
+// import { Post } from "./Post";
 
 @ObjectType()
 @Entity()
-export class User {
-  [OptionalProps]?: "username" | "updateAt" | "createdAt" | "password";
+export class User extends BaseEntity {
   @Field(() => Int)
-  @PrimaryKey()
+  @PrimaryGeneratedColumn()
   _id!: number;
 
   // @Field decorator is used to expose properties
   @Field(() => String)
-  @Property({ type: "date" })
+  @CreateDateColumn()
   createdAt: Date = new Date();
 
   @Field(() => String)
-  @Property({ type: "date", onUpdate: () => new Date() })
+  @UpdateDateColumn()
   updatedAt: Date = new Date();
 
   @Field(() => String)
-  @Property({ type: "text", unique: true })
+  @Column({ unique: true })
   username!: string;
 
   @Field(() => String)
-  @Property({ type: "text", unique: true })
+  @Column({ unique: true })
   email!: string;
 
-  @Property({ type: "text" })
+  @Column()
   password!: string;
 
   // @OneToMany(() => Post, (post) => post.creator)

@@ -1,65 +1,78 @@
 import { Post } from "../entities/Post";
 import { MyContext } from "src/types";
-import { Arg, Ctx, Query, Resolver, Int, Mutation } from "type-graphql";
+import {
+  Arg,
+  Ctx,
+  Query,
+  Resolver,
+  Int,
+  Mutation,
+  Field,
+  InputType,
+} from "type-graphql";
+import dataSource from "typeorm";
+
+@InputType()
+class PostInput {
+  @Field()
+  title: string;
+  @Field()
+  text: string;
+}
 
 // @Resolver is used as Controller in Symfony
 @Resolver()
 export class PostResolver {
   @Query(() => [Post])
-  async posts(@Ctx() { em }: MyContext): Promise<Post[]> {
-    return em.find(Post, {});
+  async posts(): Promise<Post[]> {
+    return Post.find();
   }
 
   @Query(() => Post, { nullable: true })
-  post(
-    @Arg("_id", () => Int) _id: number,
-    @Ctx() { em }: MyContext
-  ): Promise<Post | null> {
-    return em.findOne(Post, { _id });
+  post(@Arg("_id", () => Int) _id: number): Promise<Post | undefined> {
+    return Post.findOne({ where: { _id } });
   }
 
   // @Mutation is for inserting, updating, deleting
   @Mutation(() => Post)
+  // @UseMiddleware(isAuth)
   async createPost(
-    @Arg("title") title: string,
-    @Ctx() { em }: MyContext
-  ): Promise<Post | null> {
-    const post = em.create(Post, {
-      title,
-    } as Post);
-    await em.persistAndFlush(post);
-    return post;
+    @Arg("input") input: PostInput,
+    @Ctx() { req }: MyContext
+  ): Promise<Post> {
+    return Post.create({
+      ...input,
+      creatorId: req.session.userId,
+    }).save();
   }
 
   @Mutation(() => Post, { nullable: true })
   async updatePost(
     @Arg("_id") _id: number,
     @Arg("title", () => String, { nullable: true }) title: string,
-    @Ctx() { em }: MyContext
+    @Arg("text", () => String, { nullable: true }) text: string,
+    @Ctx() { req }: MyContext
   ): Promise<Post | null> {
-    const post = await em.findOne(Post, { _id });
-    if (!post) {
-      return null;
-    }
-    if (typeof title !== "undefined") {
-      post.title = title;
-      await em.persistAndFlush(post);
-    }
+    const result = await dataSource
+      .createQueryBuilder()
+      .update(Post)
+      .set({ title, text })
+      .where('id = :id and "creatorId" = :creatorId', {
+        _id,
+        creatorId: req.session.userId,
+      })
+      .returning("*")
+      .execute();
 
-    return post;
+    return result.raw[0];
   }
 
   @Mutation(() => Boolean)
   async deletePost(
     @Arg("_id") _id: number,
-    @Ctx() { em }: MyContext
+    @Ctx() { req }: MyContext
   ): Promise<Boolean> {
-    const post = await em.findOne(Post, { _id });
-    if (!post) {
-      return false;
-    }
-    em.removeAndFlush(post);
-
+    await Post.delete({ _id, creatorId: req.session.userId });
     return true;
   }
 }
