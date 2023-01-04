@@ -5,9 +5,10 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   BaseEntity,
+  ManyToOne,
 } from "typeorm";
 import { Field, ObjectType, Int } from "type-graphql";
-// import { User } from "./User";
+import { User } from "./User";
 
 // BaseEntity is an class abstraction to help run sql requests
 
@@ -39,7 +40,7 @@ export class Post extends BaseEntity {
   @Column()
   creatorId: number;
 
-  // @Field()
-  // @ManyToOne(() => User, (user) => user.posts)
-  // creator: User;
+  @Field()
+  @ManyToOne(() => User, (user) => user.posts)
+  creator: User;
 }

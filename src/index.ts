@@ -21,7 +21,7 @@ const main = async () => {
   const session = require("express-session");
 
   try {
-    const conn = await createConnection({
+    await createConnection({
       type: "postgres",
       database: "lireddit2",
       username: "postgres",
@@ -48,7 +48,7 @@ const main = async () => {
 
     const corsOptions = {
       // add for apollo studio
-      origin: ["http://localhost:3000", "https://studio.apollographql.com"],
+      origin: ["http://localhost:3000"],
       credentials: true,
     };
 

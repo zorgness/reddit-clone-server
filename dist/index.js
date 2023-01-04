@@ -23,7 +23,7 @@ const user_1 = require("./resolvers/user");
 const main = async () => {
     const session = require("express-session");
     try {
-        const conn = await (0, typeorm_1.createConnection)({
+        await (0, typeorm_1.createConnection)({
             type: "postgres",
             database: "lireddit2",
             username: "postgres",
@@ -40,7 +40,7 @@ const main = async () => {
         app.set("Access-Control-Allow-Origin", "http://localhost:4000/graphql");
         app.set("Access-Control-Allow-Credentials", true);
         const corsOptions = {
-            origin: ["http://localhost:3000", "https://studio.apollographql.com"],
+            origin: ["http://localhost:3000"],
             credentials: true,
         };
         app.use((0, cors_1.default)(corsOptions));

@@ -9,8 +9,10 @@ import {
   Mutation,
   Field,
   InputType,
+  UseMiddleware,
 } from "type-graphql";
 import dataSource from "typeorm";
+import { isAuth } from "../middleware/isAuth";
 
 @InputType()
 class PostInput {
@@ -35,7 +37,7 @@ export class PostResolver {
 
   // @Mutation is for inserting, updating, deleting
   @Mutation(() => Post)
-  // @UseMiddleware(isAuth)
+  @UseMiddleware(isAuth)
   async createPost(
     @Arg("input") input: PostInput,
     @Ctx() { req }: MyContext
@@ -47,6 +49,7 @@ export class PostResolver {
   }
 
   @Mutation(() => Post, { nullable: true })
+  @UseMiddleware(isAuth)
   async updatePost(
     @Arg("_id") _id: number,
     @Arg("title", () => String, { nullable: true }) title: string,
