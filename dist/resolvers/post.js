@@ -67,6 +67,9 @@ PaginatedPosts = __decorate([
     (0, type_graphql_1.ObjectType)()
 ], PaginatedPosts);
 let PostResolver = class PostResolver {
+    textSnippet(post) {
+        return post.text.slice(0, 50);
+    }
     async posts(limit, cursor) {
         const realLimit = Math.min(50, limit);
         const reaLimitPlusOne = realLimit + 1;
@@ -111,6 +114,13 @@ let PostResolver = class PostResolver {
     }
 };
 __decorate([
+    (0, type_graphql_1.FieldResolver)(() => String),
+    __param(0, (0, type_graphql_1.Root)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Post_1.Post]),
+    __metadata("design:returntype", void 0)
+], PostResolver.prototype, "textSnippet", null);
+__decorate([
     (0, type_graphql_1.Query)(() => PaginatedPosts),
     __param(0, (0, type_graphql_1.Arg)("limit", () => type_graphql_1.Int)),
     __param(1, (0, type_graphql_1.Arg)("cursor", () => String, { nullable: true })),
@@ -154,7 +164,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], PostResolver.prototype, "deletePost", null);
 PostResolver = __decorate([
-    (0, type_graphql_1.Resolver)()
+    (0, type_graphql_1.Resolver)(Post_1.Post)
 ], PostResolver);
 exports.PostResolver = PostResolver;
 //# sourceMappingURL=post.js.map

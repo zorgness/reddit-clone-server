@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.FakePost1672843878235 = void 0;
 class FakePost1672843878235 {
-    async up(queryRunner) {
+    async up(_) {
     }
     async down(_) { }
 }

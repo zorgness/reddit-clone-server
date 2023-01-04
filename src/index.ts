@@ -20,7 +20,7 @@ const main = async () => {
   const session = require("express-session");
 
   try {
-    const conn = await createConnection({
+    await createConnection({
       type: "postgres",
       database: "lireddit2",
       username: "postgres",

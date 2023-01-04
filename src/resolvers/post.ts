@@ -11,6 +11,8 @@ import {
   InputType,
   UseMiddleware,
   ObjectType,
+  FieldResolver,
+  Root,
 } from "type-graphql";
 import dataSource, { getConnection } from "typeorm";
 import { isAuth } from "../middleware/isAuth";
@@ -34,8 +36,13 @@ class PaginatedPosts {
 // @Resolver is used as Controller in Symfony
 // cursor give the position
 // limit is the number of posts after the cursor
-@Resolver()
+@Resolver(Post)
 export class PostResolver {
+  @FieldResolver(() => String)
+  textSnippet(@Root() post: Post) {
+    return post.text.slice(0, 50);
+  }
+
   @Query(() => PaginatedPosts)
   async posts(
     @Arg("limit", () => Int) limit: number,

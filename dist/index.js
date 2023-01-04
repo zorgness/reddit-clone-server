@@ -23,7 +23,7 @@ const user_1 = require("./resolvers/user");
 const main = async () => {
     const session = require("express-session");
     try {
-        const conn = await (0, typeorm_1.createConnection)({
+        await (0, typeorm_1.createConnection)({
             type: "postgres",
             database: "lireddit2",
             username: "postgres",
