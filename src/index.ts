@@ -1,4 +1,3 @@
-// import { Post } from "./entities/Post";
 import "reflect-metadata";
 import "dotenv-safe/config";
 import { ApolloServerPluginLandingPageGraphQLPlayground } from "apollo-server-core";
@@ -21,7 +20,7 @@ const main = async () => {
   const session = require("express-session");
 
   try {
-    await createConnection({
+    const conn = await createConnection({
       type: "postgres",
       database: "lireddit2",
       username: "postgres",
@@ -31,6 +30,11 @@ const main = async () => {
       synchronize: true,
       entities: [Post, User],
     });
+
+    // await conn
+    //   .runMigrations()
+    //   .then((result) => console.log(result))
+    //   .catch((err) => console.log(err));
 
     const app = express();
 
