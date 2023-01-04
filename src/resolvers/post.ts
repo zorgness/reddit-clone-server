@@ -32,6 +32,8 @@ class PaginatedPosts {
 }
 
 // @Resolver is used as Controller in Symfony
+// cursor give the position
+// limit is the number of posts after the cursor
 @Resolver()
 export class PostResolver {
   @Query(() => PaginatedPosts)
@@ -39,8 +41,8 @@ export class PostResolver {
     @Arg("limit", () => Int) limit: number,
     @Arg("cursor", () => String, { nullable: true }) cursor: string | null
   ): Promise<PaginatedPosts> {
-    // 20 -> 21
     const realLimit = Math.min(50, limit);
+
     const reaLimitPlusOne = realLimit + 1;
 
     const replacements: any[] = [reaLimitPlusOne];
