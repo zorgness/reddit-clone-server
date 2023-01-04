@@ -8,8 +8,7 @@
     "dev2": "nodemon --execc ts-node src/index.ts",
     "watch": "tsc -W",
     "start": "node dist/index.js",
-    "start2": "ts-node src/index.ts",
-    "create:migration": "npx mikro-orm migration:create "
+    "start2": "ts-node src/index.ts"
   },
   "keywords": [],
   "author": "",
