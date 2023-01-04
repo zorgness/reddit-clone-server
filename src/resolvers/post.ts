@@ -10,8 +10,9 @@ import {
   Field,
   InputType,
   UseMiddleware,
+  ObjectType,
 } from "type-graphql";
-import dataSource from "typeorm";
+import dataSource, { getConnection } from "typeorm";
 import { isAuth } from "../middleware/isAuth";
 
 @InputType()
@@ -22,12 +23,49 @@ class PostInput {
   text: string;
 }
 
+@ObjectType()
+class PaginatedPosts {
+  @Field(() => [Post])
+  posts: Post[];
+  @Field()
+  hasMore: boolean;
+}
+
 // @Resolver is used as Controller in Symfony
+// cursor give the position
+// limit is the number of posts after the cursor
 @Resolver()
 export class PostResolver {
-  @Query(() => [Post])
-  async posts(): Promise<Post[]> {
-    return Post.find();
+  @Query(() => PaginatedPosts)
+  async posts(
+    @Arg("limit", () => Int) limit: number,
+    @Arg("cursor", () => String, { nullable: true }) cursor: string | null
+  ): Promise<PaginatedPosts> {
+    const realLimit = Math.min(50, limit);
+
+    const reaLimitPlusOne = realLimit + 1;
+
+    const replacements: any[] = [reaLimitPlusOne];
+
+    if (cursor) {
+      replacements.push(new Date(parseInt(cursor)));
+    }
+
+    const posts = await getConnection().query(
+      `
+    select p.*
+    from post p
+    ${cursor ? `where p."createdAt" < $2` : ""}
+    order by p."createdAt" DESC
+    limit $1
+    `,
+      replacements
+    );
+
+    return {
+      posts: posts.slice(0, realLimit),
+      hasMore: posts.length === reaLimitPlusOne,
+    };
   }
 
   @Query(() => Post, { nullable: true })
