@@ -1,5 +1,5 @@
 import { Post } from "../entities/Post";
-import { MyContext } from "src/types";
+import { MyContext } from "../types";
 import {
   Arg,
   Ctx,
@@ -16,6 +16,7 @@ import {
 } from "type-graphql";
 import dataSource, { getConnection } from "typeorm";
 import { isAuth } from "../middleware/isAuth";
+import { User } from "../entities/User";
 
 @InputType()
 class PostInput {
@@ -41,6 +42,12 @@ export class PostResolver {
   @FieldResolver(() => String)
   textSnippet(@Root() post: Post) {
     return post.text.slice(0, 50);
+  }
+
+  @FieldResolver(() => User)
+  creator(@Root() post: Post, @Ctx() { userLoader }: MyContext) {
+    console.log(typeof userLoader);
+    return userLoader.load(post.creatorId);
   }
 
   @Query(() => PaginatedPosts)
