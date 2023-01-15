@@ -80,9 +80,9 @@ let PostResolver = class PostResolver {
             postId,
             value: realValue,
         });
-        await (0, typeorm_1.getConnection)().query(`update post p
-      set p.points = p.points + $1
-      where p._id = $2 `, [realValue, postId]);
+        await (0, typeorm_1.getConnection)().query(`update post
+      set points = points + $1
+      where _id = $2 `, [realValue, postId]);
         return true;
     }
     async posts(limit, cursor) {
