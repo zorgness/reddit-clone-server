@@ -15,6 +15,7 @@ import { User } from "./entities/User";
 import { HelloResolver } from "./resolvers/hello";
 import { PostResolver } from "./resolvers/post";
 import { UserResolver } from "./resolvers/user";
+import { Updoot } from "./entities/Updoot";
 
 const main = async () => {
   const session = require("express-session");
@@ -28,7 +29,7 @@ const main = async () => {
       migrations: [path.join(__dirname, "./migrations/*")],
       logging: true,
       synchronize: true,
-      entities: [Post, User],
+      entities: [Post, User, Updoot],
     });
 
     // await conn

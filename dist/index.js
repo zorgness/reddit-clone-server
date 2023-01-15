@@ -20,6 +20,7 @@ const User_1 = require("./entities/User");
 const hello_1 = require("./resolvers/hello");
 const post_1 = require("./resolvers/post");
 const user_1 = require("./resolvers/user");
+const Updoot_1 = require("./entities/Updoot");
 const main = async () => {
     const session = require("express-session");
     try {
@@ -31,7 +32,7 @@ const main = async () => {
             migrations: [path_1.default.join(__dirname, "./migrations/*")],
             logging: true,
             synchronize: true,
-            entities: [Post_1.Post, User_1.User],
+            entities: [Post_1.Post, User_1.User, Updoot_1.Updoot],
         });
         const app = (0, express_1.default)();
         let RedisStore = (0, connect_redis_1.default)(session);
