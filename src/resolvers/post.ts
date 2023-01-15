@@ -99,12 +99,6 @@ export class PostResolver {
           );
       });
     }
-    // await getConnection().query(
-    //   `update post
-    //   set points = points + $1
-    //   where _id = $2 `,
-    //   [realValue, postId]
-    // );
 
     return true;
   }
@@ -112,13 +106,14 @@ export class PostResolver {
   @Query(() => PaginatedPosts)
   async posts(
     @Arg("limit", () => Int) limit: number,
-    @Arg("cursor", () => String, { nullable: true }) cursor: string | null
+    @Arg("cursor", () => String, { nullable: true }) cursor: string | null,
+    @Ctx() { req }: MyContext
   ): Promise<PaginatedPosts> {
     const realLimit = Math.min(50, limit);
 
     const realLimitPlusOne = realLimit + 1;
 
-    const replacements: any[] = [realLimitPlusOne];
+    const replacements: any[] = [realLimitPlusOne, req.session.userId];
 
     if (cursor) {
       replacements.push(new Date(parseInt(cursor)));
@@ -129,10 +124,15 @@ export class PostResolver {
     select p.*,
     json_build_object(
       '_id', u._id,
-      'username', u.username) creator
+      'username', u.username) creator,
+      ${
+        req.session.userId
+          ? `(select value from updoot where "userId" = $2 and "postId" = p._id) "voteStatus"`
+          : "null as 'voteStatus'"
+      }
     from post p
     inner join public.user u on u._id = p."creatorId"
-    ${cursor ? `where p."createdAt" < $2` : ""}
+    ${cursor ? `where p."createdAt" < $3` : ""}
     order by p."createdAt" DESC
     limit $1
     `,
