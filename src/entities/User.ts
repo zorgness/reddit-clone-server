@@ -9,6 +9,7 @@ import {
   OneToMany,
 } from "typeorm";
 import { Post } from "./Post";
+import { Updoot } from "./Updoot";
 // import { Post } from "./Post";
 
 @ObjectType()
