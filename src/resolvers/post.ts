@@ -59,17 +59,52 @@ export class PostResolver {
     const isUpdoot = value !== -1;
     const realValue = isUpdoot ? 1 : -1;
     const { userId } = req.session;
-    await Updoot.insert({
-      userId,
-      postId,
-      value: realValue,
-    });
-    await getConnection().query(
-      `update post
-      set points = points + $1
-      where _id = $2 `,
-      [realValue, postId]
-    );
+
+    const updoot = await Updoot.findOne({ where: { postId, userId } });
+
+    // user as already voted and want to change their vote
+    if (updoot && updoot.value !== realValue) {
+      console.log("postId: ", postId);
+      await getConnection().transaction(async (tm) => {
+        await tm.query(
+          `
+        update updoot
+        set value = $1
+        where "postId" = $2 and "userId" = $3
+        `,
+          [realValue, postId, userId]
+        );
+
+        await tm.query(
+          ` Update post
+            set points = points + $1
+            where _id = $2 `,
+          [2 * realValue, postId]
+        );
+      });
+    } else if (!updoot) {
+      await getConnection().transaction(async (tm) => {
+        await tm.query(
+          `
+        insert into updoot ("userId", "postId", value)
+        values ($1, $2, $3)
+        `,
+          [userId, postId, value]
+        ),
+          await tm.query(
+            `update post
+          set points = points + $1
+          where _id = $2 `,
+            [realValue, postId]
+          );
+      });
+    }
+    // await getConnection().query(
+    //   `update post
+    //   set points = points + $1
+    //   where _id = $2 `,
+    //   [realValue, postId]
+    // );
 
     return true;
   }
@@ -104,7 +139,7 @@ export class PostResolver {
       replacements
     );
 
-    console.log("post: ", posts);
+    // console.log("post: ", posts);
 
     return {
       posts: posts.slice(0, realLimit),
