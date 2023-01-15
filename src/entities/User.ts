@@ -38,6 +38,9 @@ export class User extends BaseEntity {
   @Column()
   password!: string;
 
+  @OneToMany(() => Updoot, (updoot) => updoot.user)
+  updoots: Updoot[];
+
   @OneToMany(() => Post, (post) => post.creator)
   posts: Post[];
 }

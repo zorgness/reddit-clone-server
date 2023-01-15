@@ -6,9 +6,11 @@ import {
   UpdateDateColumn,
   BaseEntity,
   ManyToOne,
+  OneToMany,
 } from "typeorm";
 import { Field, ObjectType, Int } from "type-graphql";
 import { User } from "./User";
+import { Updoot } from "./Updoot";
 
 // BaseEntity is an class abstraction to help run sql requests
 
@@ -39,6 +41,9 @@ export class Post extends BaseEntity {
   @Field()
   @Column()
   creatorId: number;
+
+  @OneToMany(() => Updoot, (updoot) => updoot.post)
+  updoots: Updoot[];
 
   @Field()
   @ManyToOne(() => User, (user) => user.posts)
