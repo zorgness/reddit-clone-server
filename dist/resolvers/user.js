@@ -53,7 +53,6 @@ UserResponse = __decorate([
 ], UserResponse);
 let UserResolver = class UserResolver {
     async me({ req }) {
-        console.log(req.session);
         if (!req.session.userId) {
             return null;
         }

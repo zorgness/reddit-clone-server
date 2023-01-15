@@ -40,7 +40,7 @@ const main = async () => {
 
     let RedisStore = connectRedis(session);
 
-    const redis = new Redis();
+    const redis = new Redis({ port: 6379, host: "127.0.0.1" });
 
     app.set("trust proxy", true);
     app.set("Access-Control-Allow-Origin", "http://localhost:4000/graphql");

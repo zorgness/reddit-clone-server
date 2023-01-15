@@ -35,7 +35,7 @@ const main = async () => {
         });
         const app = (0, express_1.default)();
         let RedisStore = (0, connect_redis_1.default)(session);
-        const redis = new ioredis_1.default();
+        const redis = new ioredis_1.default({ port: 6379, host: "127.0.0.1" });
         app.set("trust proxy", true);
         app.set("Access-Control-Allow-Origin", "http://localhost:4000/graphql");
         app.set("Access-Control-Allow-Credentials", true);

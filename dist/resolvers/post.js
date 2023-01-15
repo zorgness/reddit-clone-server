@@ -40,7 +40,6 @@ const Post_1 = require("../entities/Post");
 const type_graphql_1 = require("type-graphql");
 const typeorm_1 = __importStar(require("typeorm"));
 const isAuth_1 = require("../middleware/isAuth");
-const User_1 = require("../entities/User");
 let PostInput = class PostInput {
 };
 __decorate([
@@ -71,27 +70,28 @@ let PostResolver = class PostResolver {
     textSnippet(post) {
         return post.text.slice(0, 50);
     }
-    creator(post, { userLoader }) {
-        console.log(typeof userLoader);
-        return userLoader.load(post.creatorId);
-    }
     async posts(limit, cursor) {
         const realLimit = Math.min(50, limit);
-        const reaLimitPlusOne = realLimit + 1;
-        const replacements = [reaLimitPlusOne];
+        const realLimitPlusOne = realLimit + 1;
+        const replacements = [realLimitPlusOne];
         if (cursor) {
             replacements.push(new Date(parseInt(cursor)));
         }
         const posts = await (0, typeorm_1.getConnection)().query(`
-    select p.*
+    select p.*,
+    json_build_object(
+      '_id', u._id,
+      'username', u.username) creator
     from post p
+    inner join public.user u on u._id = p."creatorId"
     ${cursor ? `where p."createdAt" < $2` : ""}
     order by p."createdAt" DESC
     limit $1
     `, replacements);
+        console.log("post: ", posts);
         return {
             posts: posts.slice(0, realLimit),
-            hasMore: posts.length === reaLimitPlusOne,
+            hasMore: posts.length === realLimitPlusOne,
         };
     }
     post(_id) {
@@ -125,14 +125,6 @@ __decorate([
     __metadata("design:paramtypes", [Post_1.Post]),
     __metadata("design:returntype", void 0)
 ], PostResolver.prototype, "textSnippet", null);
-__decorate([
-    (0, type_graphql_1.FieldResolver)(() => User_1.User),
-    __param(0, (0, type_graphql_1.Root)()),
-    __param(1, (0, type_graphql_1.Ctx)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Post_1.Post, Object]),
-    __metadata("design:returntype", void 0)
-], PostResolver.prototype, "creator", null);
 __decorate([
     (0, type_graphql_1.Query)(() => PaginatedPosts),
     __param(0, (0, type_graphql_1.Arg)("limit", () => type_graphql_1.Int)),

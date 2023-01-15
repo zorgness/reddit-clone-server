@@ -16,7 +16,7 @@ import {
 } from "type-graphql";
 import dataSource, { getConnection } from "typeorm";
 import { isAuth } from "../middleware/isAuth";
-import { User } from "../entities/User";
+// import { User } from "../entities/User";
 
 @InputType()
 class PostInput {
@@ -44,11 +44,10 @@ export class PostResolver {
     return post.text.slice(0, 50);
   }
 
-  @FieldResolver(() => User)
-  creator(@Root() post: Post, @Ctx() { userLoader }: MyContext) {
-    console.log(typeof userLoader);
-    return userLoader.load(post.creatorId);
-  }
+  // @FieldResolver(() => User)
+  // creator(@Root() post: Post, @Ctx() { userLoader }: MyContext) {
+  //   return userLoader?.load(post.creatorId);
+  // }
 
   @Query(() => PaginatedPosts)
   async posts(
@@ -57,9 +56,9 @@ export class PostResolver {
   ): Promise<PaginatedPosts> {
     const realLimit = Math.min(50, limit);
 
-    const reaLimitPlusOne = realLimit + 1;
+    const realLimitPlusOne = realLimit + 1;
 
-    const replacements: any[] = [reaLimitPlusOne];
+    const replacements: any[] = [realLimitPlusOne];
 
     if (cursor) {
       replacements.push(new Date(parseInt(cursor)));
@@ -67,8 +66,12 @@ export class PostResolver {
 
     const posts = await getConnection().query(
       `
-    select p.*
+    select p.*,
+    json_build_object(
+      '_id', u._id,
+      'username', u.username) creator
     from post p
+    inner join public.user u on u._id = p."creatorId"
     ${cursor ? `where p."createdAt" < $2` : ""}
     order by p."createdAt" DESC
     limit $1
@@ -76,9 +79,11 @@ export class PostResolver {
       replacements
     );
 
+    console.log("post: ", posts);
+
     return {
       posts: posts.slice(0, realLimit),
-      hasMore: posts.length === reaLimitPlusOne,
+      hasMore: posts.length === realLimitPlusOne,
     };
   }
 
