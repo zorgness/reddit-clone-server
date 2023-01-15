@@ -123,7 +123,7 @@ let PostResolver = class PostResolver {
             : "null as voteStatus"}
     from post p
     inner join public.user u on u._id = p."creatorId"
-    ${cursor ? `where p."createdAt" < $3` : ""}
+    ${cursor ? `where p."createdAt" < $${cursorIndex}` : ""}
     order by p."createdAt" DESC
     limit $1
     `, replacements);
