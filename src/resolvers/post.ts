@@ -64,7 +64,6 @@ export class PostResolver {
 
     // user as already voted and want to change their vote
     if (updoot && updoot.value !== realValue) {
-      console.log("postId: ", postId);
       await getConnection().transaction(async (tm) => {
         await tm.query(
           `
@@ -113,7 +112,13 @@ export class PostResolver {
 
     const realLimitPlusOne = realLimit + 1;
 
-    const replacements: any[] = [realLimitPlusOne, req.session.userId];
+    const replacements: any[] = [realLimitPlusOne];
+
+    let cursorIndex = 2;
+    if (req.session.userId) {
+      replacements.push(req.session.userId);
+      cursorIndex = 3;
+    }
 
     if (cursor) {
       replacements.push(new Date(parseInt(cursor)));
@@ -128,7 +133,7 @@ export class PostResolver {
       ${
         req.session.userId
           ? `(select value from updoot where "userId" = $2 and "postId" = p._id) "voteStatus"`
-          : "null as 'voteStatus'"
+          : "null as voteStatus"
       }
     from post p
     inner join public.user u on u._id = p."creatorId"

@@ -77,7 +77,6 @@ let PostResolver = class PostResolver {
         const { userId } = req.session;
         const updoot = await Updoot_1.Updoot.findOne({ where: { postId, userId } });
         if (updoot && updoot.value !== realValue) {
-            console.log("postId: ", postId);
             await (0, typeorm_1.getConnection)().transaction(async (tm) => {
                 await tm.query(`
         update updoot
@@ -105,7 +104,12 @@ let PostResolver = class PostResolver {
     async posts(limit, cursor, { req }) {
         const realLimit = Math.min(50, limit);
         const realLimitPlusOne = realLimit + 1;
-        const replacements = [realLimitPlusOne, req.session.userId];
+        const replacements = [realLimitPlusOne];
+        let cursorIndex = 2;
+        if (req.session.userId) {
+            replacements.push(req.session.userId);
+            cursorIndex = 3;
+        }
         if (cursor) {
             replacements.push(new Date(parseInt(cursor)));
         }
@@ -116,7 +120,7 @@ let PostResolver = class PostResolver {
       'username', u.username) creator,
       ${req.session.userId
             ? `(select value from updoot where "userId" = $2 and "postId" = p._id) "voteStatus"`
-            : "null as 'voteStatus'"}
+            : "null as voteStatus"}
     from post p
     inner join public.user u on u._id = p."creatorId"
     ${cursor ? `where p."createdAt" < $3` : ""}
