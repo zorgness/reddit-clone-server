@@ -1,22 +1,22 @@
-import { Post } from "../entities/Post";
-import { MyContext } from "../types";
 import {
   Arg,
   Ctx,
-  Query,
-  Resolver,
+  Field,
+  FieldResolver,
+  InputType,
   Int,
   Mutation,
-  Field,
-  InputType,
-  UseMiddleware,
   ObjectType,
-  FieldResolver,
+  Query,
+  Resolver,
   Root,
+  UseMiddleware,
 } from "type-graphql";
 import dataSource, { getConnection } from "typeorm";
-import { isAuth } from "../middleware/isAuth";
+import { Post } from "../entities/Post";
 import { Updoot } from "../entities/Updoot";
+import { isAuth } from "../middleware/isAuth";
+import { MyContext } from "../types";
 
 @InputType()
 class PostInput {
@@ -153,8 +153,13 @@ export class PostResolver {
   }
 
   @Query(() => Post, { nullable: true })
-  post(@Arg("_id", () => Int) _id: number): Promise<Post | undefined> {
-    return Post.findOne({ where: { _id } });
+  async post(@Arg("_id", () => Int) _id: number): Promise<Post | undefined> {
+    const post = await Post.findOne({
+      where: { _id: _id },
+    });
+    console.log("post: ", post);
+
+    return post;
   }
 
   // @Mutation is for inserting, updating, deleting
@@ -193,11 +198,20 @@ export class PostResolver {
   }
 
   @Mutation(() => Boolean)
+  @UseMiddleware(isAuth)
   async deletePost(
     @Arg("_id") _id: number,
     @Ctx() { req }: MyContext
   ): Promise<Boolean> {
-    await Post.delete({ _id, creatorId: req.session.userId });
+    const post = await Post.findOne(_id);
+    if (!post) {
+      return false;
+    }
+    if (post.creatorId !== req.session.userId) {
+      return false;
+    }
+
+    await Post.delete(_id);
     return true;
   }
 }

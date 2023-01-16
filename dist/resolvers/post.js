@@ -36,11 +36,11 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PostResolver = void 0;
-const Post_1 = require("../entities/Post");
 const type_graphql_1 = require("type-graphql");
 const typeorm_1 = __importStar(require("typeorm"));
-const isAuth_1 = require("../middleware/isAuth");
+const Post_1 = require("../entities/Post");
 const Updoot_1 = require("../entities/Updoot");
+const isAuth_1 = require("../middleware/isAuth");
 let PostInput = class PostInput {
 };
 __decorate([
@@ -132,8 +132,12 @@ let PostResolver = class PostResolver {
             hasMore: posts.length === realLimitPlusOne,
         };
     }
-    post(_id) {
-        return Post_1.Post.findOne({ where: { _id } });
+    async post(_id) {
+        const post = await Post_1.Post.findOne({
+            where: { _id: _id },
+        });
+        console.log("post: ", post);
+        return post;
     }
     async createPost(input, { req }) {
         return Post_1.Post.create(Object.assign(Object.assign({}, input), { creatorId: req.session.userId })).save();
@@ -152,7 +156,14 @@ let PostResolver = class PostResolver {
         return result.raw[0];
     }
     async deletePost(_id, { req }) {
-        await Post_1.Post.delete({ _id, creatorId: req.session.userId });
+        const post = await Post_1.Post.findOne(_id);
+        if (!post) {
+            return false;
+        }
+        if (post.creatorId !== req.session.userId) {
+            return false;
+        }
+        await Post_1.Post.delete(_id);
         return true;
     }
 };
@@ -211,6 +222,7 @@ __decorate([
 ], PostResolver.prototype, "updatePost", null);
 __decorate([
     (0, type_graphql_1.Mutation)(() => Boolean),
+    (0, type_graphql_1.UseMiddleware)(isAuth_1.isAuth),
     __param(0, (0, type_graphql_1.Arg)("_id")),
     __param(1, (0, type_graphql_1.Ctx)()),
     __metadata("design:type", Function),

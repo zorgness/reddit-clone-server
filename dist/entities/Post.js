@@ -61,14 +61,14 @@ __decorate([
     __metadata("design:type", Number)
 ], Post.prototype, "creatorId", void 0);
 __decorate([
+    (0, type_graphql_1.Field)(),
+    (0, typeorm_1.ManyToOne)(() => User_1.User, (user) => user.posts, { eager: true }),
+    __metadata("design:type", User_1.User)
+], Post.prototype, "creator", void 0);
+__decorate([
     (0, typeorm_1.OneToMany)(() => Updoot_1.Updoot, (updoot) => updoot.post),
     __metadata("design:type", Array)
 ], Post.prototype, "updoots", void 0);
-__decorate([
-    (0, type_graphql_1.Field)(),
-    (0, typeorm_1.ManyToOne)(() => User_1.User, (user) => user.posts),
-    __metadata("design:type", User_1.User)
-], Post.prototype, "creator", void 0);
 Post = __decorate([
     (0, type_graphql_1.ObjectType)(),
     (0, typeorm_1.Entity)()

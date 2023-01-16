@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon dist/index.js",
-    "dev2": "nodemon --execc ts-node src/index.ts",
+    "dev2": "nodemon --exec ts-node src/index.ts",
     "watch": "tsc -W",
     "start": "node dist/index.js",
     "start2": "ts-node src/index.ts"
