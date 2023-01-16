@@ -157,8 +157,6 @@ export class PostResolver {
     const post = await Post.findOne({
       where: { _id: _id },
     });
-    console.log("post: ", post);
-
     return post;
   }
 
@@ -187,7 +185,7 @@ export class PostResolver {
       .createQueryBuilder()
       .update(Post)
       .set({ title, text })
-      .where('id = :id and "creatorId" = :creatorId', {
+      .where('_id = :id and "creatorId" = :creatorId', {
         _id,
         creatorId: req.session.userId,
       })
