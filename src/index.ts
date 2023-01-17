@@ -16,6 +16,8 @@ import { HelloResolver } from "./resolvers/hello";
 import { PostResolver } from "./resolvers/post";
 import { UserResolver } from "./resolvers/user";
 import { Updoot } from "./entities/Updoot";
+import { createUserLoader } from "./utils/createUserLoader";
+import { createUpdootLoader } from "./utils/createUpdooLoader";
 
 const main = async () => {
   const session = require("express-session");
@@ -91,7 +93,13 @@ const main = async () => {
         }),
       ],
 
-      context: ({ req, res }) => ({ req, res, redis }),
+      context: ({ req, res }) => ({
+        req,
+        res,
+        redis,
+        userloader: createUserLoader(),
+        updootLoader: createUpdootLoader(),
+      }),
     });
 
     await apolloServer.start();

@@ -21,6 +21,8 @@ const hello_1 = require("./resolvers/hello");
 const post_1 = require("./resolvers/post");
 const user_1 = require("./resolvers/user");
 const Updoot_1 = require("./entities/Updoot");
+const createUserLoader_1 = require("./utils/createUserLoader");
+const createUpdooLoader_1 = require("./utils/createUpdooLoader");
 const main = async () => {
     const session = require("express-session");
     try {
@@ -74,7 +76,13 @@ const main = async () => {
                     },
                 }),
             ],
-            context: ({ req, res }) => ({ req, res, redis }),
+            context: ({ req, res }) => ({
+                req,
+                res,
+                redis,
+                userloader: (0, createUserLoader_1.createUserLoader)(),
+                updootLoader: (0, createUpdooLoader_1.createUpdootLoader)(),
+            }),
         });
         await apolloServer.start();
         apolloServer.applyMiddleware({

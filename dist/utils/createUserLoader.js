@@ -9,8 +9,8 @@ const User_1 = require("../entities/User");
 const createUserLoader = () => new dataloader_1.default(async (userIds) => {
     const users = await User_1.User.findByIds(userIds);
     const userIdToUser = {};
-    users.forEach((u) => {
-        userIdToUser[u._id] = u;
+    users.forEach((user) => {
+        userIdToUser[user._id] = user;
     });
     const sortedUsers = userIds.map((userId) => userIdToUser[userId]);
     return sortedUsers;

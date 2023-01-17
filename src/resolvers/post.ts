@@ -12,9 +12,10 @@ import {
   Root,
   UseMiddleware,
 } from "type-graphql";
-import dataSource, { getConnection } from "typeorm";
+import { getConnection } from "typeorm";
 import { Post } from "../entities/Post";
 import { Updoot } from "../entities/Updoot";
+import { User } from "../entities/User";
 import { isAuth } from "../middleware/isAuth";
 import { MyContext } from "../types";
 
@@ -44,9 +45,34 @@ export class PostResolver {
     return post.text.slice(0, 50);
   }
 
+  // NOT WORKING ??? TO LOAD USER AS CREATOR ON POST IN A SINGLE QUERY
+  //
   // @FieldResolver(() => User)
-  // creator(@Root() post: Post, @Ctx() { userLoader }: MyContext) {
-  //   return userLoader?.load(post.creatorId);
+  // async creator(@Root() post: Post, @Ctx() { userLoader }: MyContext) {
+  //   console.log("userloader: ", userLoader);
+  //   console.log("post: ", post);
+  //   const user = await userLoader.load(post.creatorId);
+
+  //   return user;
+  // }
+
+  // MODOIFY THE ORDER OF POST DEPENDS ON VOTE
+  //
+  // @FieldResolver(() => Int, { nullable: true })
+  // async voteStatus(
+  //   @Root() post: Post,
+  //   @Ctx() { updootLoader, req }: MyContext
+  // ) {
+  //   if (!req.session.userId) {
+  //     return null;
+  //   }
+
+  //   const updoot = await updootLoader.load({
+  //     postId: post._id,
+  //     userId: req.session.userId,
+  //   });
+
+  //   return updoot ? updoot.value : null;
   // }
 
   @Mutation(() => Boolean)
@@ -124,6 +150,17 @@ export class PostResolver {
       replacements.push(new Date(parseInt(cursor)));
     }
 
+    // const posts = await getConnection().query(
+    //   `
+    // select p.*
+    // from post p
+    // ${cursor ? `where p."createdAt" < $2` : ""}
+    // order by p."createdAt" DESC
+    // limit $1
+    // `,
+    //   replacements
+    // );
+
     const posts = await getConnection().query(
       `
     select p.*,
@@ -143,8 +180,6 @@ export class PostResolver {
     `,
       replacements
     );
-
-    // console.log("post: ", posts);
 
     return {
       posts: posts.slice(0, realLimit),
@@ -192,7 +227,6 @@ export class PostResolver {
       .returning("*")
       .execute();
 
-    console.log(result);
     return result.raw[0];
   }
 

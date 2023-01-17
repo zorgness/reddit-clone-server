@@ -129,7 +129,6 @@ let PostResolver = class PostResolver {
         })
             .returning("*")
             .execute();
-        console.log(result);
         return result.raw[0];
     }
     async deletePost(_id, { req }) {
