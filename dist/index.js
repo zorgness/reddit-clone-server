@@ -26,24 +26,24 @@ const createUpdooLoader_1 = require("./utils/createUpdooLoader");
 const main = async () => {
     const session = require("express-session");
     try {
-        await (0, typeorm_1.createConnection)({
+        const conn = await (0, typeorm_1.createConnection)({
             type: "postgres",
-            database: "lireddit2",
-            username: "postgres",
-            password: "postgres",
+            url: process.env.DATABASE_URL,
             migrations: [path_1.default.join(__dirname, "./migrations/*")],
             logging: true,
-            synchronize: true,
             entities: [Post_1.Post, User_1.User, Updoot_1.Updoot],
         });
+        await conn
+            .runMigrations()
+            .then((result) => console.log(result))
+            .catch((err) => console.log(err));
         const app = (0, express_1.default)();
         let RedisStore = (0, connect_redis_1.default)(session);
-        const redis = new ioredis_1.default({ port: 6379, host: "127.0.0.1" });
+        const redis = new ioredis_1.default(process.env.REDIS_URL);
         app.set("trust proxy", true);
-        app.set("Access-Control-Allow-Origin", "http://localhost:4000/graphql");
         app.set("Access-Control-Allow-Credentials", true);
         const corsOptions = {
-            origin: ["http://localhost:3000"],
+            origin: [process.env.CORS_ORIGIN],
             credentials: true,
         };
         app.use((0, cors_1.default)(corsOptions));
@@ -58,6 +58,7 @@ const main = async () => {
                 httpOnly: false,
                 sameSite: "lax",
                 secure: constants_1.__prod__,
+                domain: constants_1.__prod__ ? ".codeponder.com" : undefined,
             },
             saveUninitialized: false,
             secret: process.env.SESSION_SECRET,
@@ -89,7 +90,7 @@ const main = async () => {
             app,
             cors: false,
         });
-        app.listen(4000, () => {
+        app.listen(parseInt(process.env.PORT), () => {
             console.log("server listening on port 4000");
         });
     }

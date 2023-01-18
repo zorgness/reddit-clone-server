@@ -23,30 +23,27 @@ const main = async () => {
   const session = require("express-session");
 
   try {
-    await createConnection({
+    const conn = await createConnection({
       type: "postgres",
-      database: "lireddit2",
-      username: "postgres",
-      password: "postgres",
+      url: process.env.DATABASE_URL,
       migrations: [path.join(__dirname, "./migrations/*")],
       logging: true,
-      synchronize: true,
+      // synchronize: true,
       entities: [Post, User, Updoot],
     });
 
-    // await conn
-    //   .runMigrations()
-    //   .then((result) => console.log(result))
-    //   .catch((err) => console.log(err));
+    await conn
+      .runMigrations()
+      .then((result) => console.log(result))
+      .catch((err) => console.log(err));
 
     const app = express();
 
     let RedisStore = connectRedis(session);
 
-    const redis = new Redis({ port: 6379, host: "127.0.0.1" });
+    const redis = new Redis(process.env.REDIS_URL as any);
 
     app.set("trust proxy", true);
-    app.set("Access-Control-Allow-Origin", "http://localhost:4000/graphql");
     app.set("Access-Control-Allow-Credentials", true);
 
     // app.get("/", (_, res) => {
@@ -55,7 +52,7 @@ const main = async () => {
 
     const corsOptions = {
       // add for apollo studio
-      origin: ["http://localhost:3000"],
+      origin: [process.env.CORS_ORIGIN as string],
       credentials: true,
     };
 
@@ -72,6 +69,7 @@ const main = async () => {
           httpOnly: false,
           sameSite: "lax", // csrf protection
           secure: __prod__,
+          domain: __prod__ ? ".codeponder.com" : undefined,
         },
         saveUninitialized: false,
         secret: process.env.SESSION_SECRET,
@@ -109,7 +107,7 @@ const main = async () => {
       cors: false,
     });
 
-    app.listen(4000, () => {
+    app.listen(parseInt(process.env.PORT as string), () => {
       console.log("server listening on port 4000");
     });
   } catch (error) {
