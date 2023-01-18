@@ -45,10 +45,12 @@ const main = async () => {
 
     app.set("trust proxy", 1);
     app.set("Access-Control-Allow-Credentials", true);
-
-    app.get("/", (_, res) => {
-      res.send("api connection established");
-    });
+    app.set("Access-Control-Allow-Origin", process.env.CORS_ORIGIN as string);
+    app.set(
+      "Access-Control-Allow-Headers",
+      "Origin, X-Requested-With, Content-Type, Accept, Authorization, X-HTTP-Method-Override, Set-Cookie, Cookie"
+    );
+    app.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
 
     const corsOptions = {
       // add for apollo studio
@@ -69,13 +71,16 @@ const main = async () => {
           httpOnly: false,
           sameSite: "lax", // csrf protection
           secure: __prod__,
-          domain: __prod__ ? process.env.CORS_ORIGIN : undefined,
         },
         saveUninitialized: false,
         secret: process.env.SESSION_SECRET,
         resave: false,
       })
     );
+
+    app.get("/", (_, res) => {
+      res.send("api connection established");
+    });
 
     const apolloServer = new ApolloServer({
       schema: await buildSchema({

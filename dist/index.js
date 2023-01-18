@@ -42,9 +42,9 @@ const main = async () => {
         const redis = new ioredis_1.default(process.env.REDIS_URL);
         app.set("trust proxy", 1);
         app.set("Access-Control-Allow-Credentials", true);
-        app.get("/", (_, res) => {
-            res.send("api connection established");
-        });
+        app.set("Access-Control-Allow-Origin", process.env.CORS_ORIGIN);
+        app.set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization, X-HTTP-Method-Override, Set-Cookie, Cookie");
+        app.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
         const corsOptions = {
             origin: [process.env.CORS_ORIGIN],
             credentials: true,
@@ -61,12 +61,14 @@ const main = async () => {
                 httpOnly: false,
                 sameSite: "lax",
                 secure: constants_1.__prod__,
-                domain: constants_1.__prod__ ? process.env.CORS_ORIGIN : undefined,
             },
             saveUninitialized: false,
             secret: process.env.SESSION_SECRET,
             resave: false,
         }));
+        app.get("/", (_, res) => {
+            res.send("api connection established");
+        });
         const apolloServer = new apollo_server_express_1.ApolloServer({
             schema: await (0, type_graphql_1.buildSchema)({
                 resolvers: [hello_1.HelloResolver, post_1.PostResolver, user_1.UserResolver],

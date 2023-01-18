@@ -41,6 +41,8 @@ export class UserResolver {
       return null;
     }
 
+    console.log(req.session.cookie.domain);
+
     const user = await User.findOne({ where: { _id: req.session.userId } });
     return user;
   }

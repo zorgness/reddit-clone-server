@@ -56,6 +56,7 @@ let UserResolver = class UserResolver {
         if (!req.session.userId) {
             return null;
         }
+        console.log(req.session.cookie.domain);
         const user = await User_1.User.findOne({ where: { _id: req.session.userId } });
         return user;
     }
