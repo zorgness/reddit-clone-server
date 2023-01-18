@@ -46,9 +46,9 @@ const main = async () => {
     app.set("trust proxy", true);
     app.set("Access-Control-Allow-Credentials", true);
 
-    // app.get("/", (_, res) => {
-    //   res.send("hello world!");
-    // });
+    app.get("/", (_, res) => {
+      res.send("api connection established");
+    });
 
     const corsOptions = {
       // add for apollo studio
@@ -69,7 +69,7 @@ const main = async () => {
           httpOnly: false,
           sameSite: "lax", // csrf protection
           secure: __prod__,
-          domain: __prod__ ? ".codeponder.com" : undefined,
+          domain: __prod__ ? (process.env.DOMAIN_API_URL as string) : undefined,
         },
         saveUninitialized: false,
         secret: process.env.SESSION_SECRET,

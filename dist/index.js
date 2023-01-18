@@ -42,6 +42,9 @@ const main = async () => {
         const redis = new ioredis_1.default(process.env.REDIS_URL);
         app.set("trust proxy", true);
         app.set("Access-Control-Allow-Credentials", true);
+        app.get("/", (_, res) => {
+            res.send("api connection established");
+        });
         const corsOptions = {
             origin: [process.env.CORS_ORIGIN],
             credentials: true,
@@ -58,7 +61,7 @@ const main = async () => {
                 httpOnly: false,
                 sameSite: "lax",
                 secure: constants_1.__prod__,
-                domain: constants_1.__prod__ ? ".codeponder.com" : undefined,
+                domain: constants_1.__prod__ ? process.env.DOMAIN_API_URL : undefined,
             },
             saveUninitialized: false,
             secret: process.env.SESSION_SECRET,
