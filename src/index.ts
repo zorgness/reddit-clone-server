@@ -43,7 +43,7 @@ const main = async () => {
 
     const redis = new Redis(process.env.REDIS_URL as any);
 
-    app.set("trust proxy", true);
+    app.set("trust proxy", 1);
     app.set("Access-Control-Allow-Credentials", true);
 
     app.get("/", (_, res) => {
@@ -69,7 +69,7 @@ const main = async () => {
           httpOnly: false,
           sameSite: "lax", // csrf protection
           secure: __prod__,
-          domain: __prod__ ? (process.env.DOMAIN_API_URL as string) : undefined,
+          domain: __prod__ ? process.env.CORS_ORIGIN : undefined,
         },
         saveUninitialized: false,
         secret: process.env.SESSION_SECRET,

@@ -40,7 +40,7 @@ const main = async () => {
         const app = (0, express_1.default)();
         let RedisStore = (0, connect_redis_1.default)(session);
         const redis = new ioredis_1.default(process.env.REDIS_URL);
-        app.set("trust proxy", true);
+        app.set("trust proxy", 1);
         app.set("Access-Control-Allow-Credentials", true);
         app.get("/", (_, res) => {
             res.send("api connection established");
@@ -61,7 +61,7 @@ const main = async () => {
                 httpOnly: false,
                 sameSite: "lax",
                 secure: constants_1.__prod__,
-                domain: constants_1.__prod__ ? process.env.DOMAIN_API_URL : undefined,
+                domain: constants_1.__prod__ ? process.env.CORS_ORIGIN : undefined,
             },
             saveUninitialized: false,
             secret: process.env.SESSION_SECRET,
