@@ -28,7 +28,7 @@ const main = async () => {
       url: process.env.DATABASE_URL,
       migrations: [path.join(__dirname, "./migrations/*")],
       logging: true,
-      // synchronize: true,
+      synchronize: !__prod__,
       entities: [Post, User, Updoot],
     });
 
@@ -38,16 +38,10 @@ const main = async () => {
 
     let RedisStore = connectRedis(session);
 
-    const redis = new Redis(process.env.REDIS_URL as any);
+    // const redis = new Redis(process.env.REDIS_URL as any);
+    const redis = new Redis();
 
     app.set("trust proxy", 1);
-    // app.set("Access-Control-Allow-Credentials", true);
-    // app.set("Access-Control-Allow-Origin", process.env.CORS_ORIGIN as string);
-    // app.set(
-    //   "Access-Control-Allow-Headers",
-    //   "Origin, X-Requested-With, Content-Type, Accept, Authorization, X-HTTP-Method-Override, Set-Cookie, Cookie"
-    // );
-    // app.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
 
     const corsOptions = {
       // add for apollo studio

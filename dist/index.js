@@ -26,25 +26,18 @@ const createUpdooLoader_1 = require("./utils/createUpdooLoader");
 const main = async () => {
     const session = require("express-session");
     try {
-        const conn = await (0, typeorm_1.createConnection)({
+        await (0, typeorm_1.createConnection)({
             type: "postgres",
             url: process.env.DATABASE_URL,
             migrations: [path_1.default.join(__dirname, "./migrations/*")],
             logging: true,
+            synchronize: !constants_1.__prod__,
             entities: [Post_1.Post, User_1.User, Updoot_1.Updoot],
         });
-        await conn
-            .runMigrations()
-            .then((result) => console.log(result))
-            .catch((err) => console.log(err));
         const app = (0, express_1.default)();
         let RedisStore = (0, connect_redis_1.default)(session);
-        const redis = new ioredis_1.default(process.env.REDIS_URL);
+        const redis = new ioredis_1.default();
         app.set("trust proxy", 1);
-        app.set("Access-Control-Allow-Credentials", true);
-        app.set("Access-Control-Allow-Origin", process.env.CORS_ORIGIN);
-        app.set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization, X-HTTP-Method-Override, Set-Cookie, Cookie");
-        app.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
         const corsOptions = {
             origin: [process.env.CORS_ORIGIN],
             credentials: true,
@@ -61,7 +54,6 @@ const main = async () => {
                 httpOnly: true,
                 sameSite: constants_1.__prod__ ? "none" : "lax",
                 secure: constants_1.__prod__,
-                domain: constants_1.__prod__ ? ".wagon-garden-manager.shop" : undefined,
             },
             saveUninitialized: false,
             secret: process.env.SESSION_SECRET,
