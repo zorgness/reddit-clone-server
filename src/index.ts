@@ -23,7 +23,7 @@ const main = async () => {
   const session = require("express-session");
 
   try {
-    const conn = await createConnection({
+    await createConnection({
       type: "postgres",
       url: process.env.DATABASE_URL,
       migrations: [path.join(__dirname, "./migrations/*")],
@@ -32,10 +32,7 @@ const main = async () => {
       entities: [Post, User, Updoot],
     });
 
-    await conn
-      .runMigrations()
-      .then((result) => console.log(result))
-      .catch((err) => console.log(err));
+    // await conn.runMigrations();
 
     const app = express();
 
@@ -44,13 +41,13 @@ const main = async () => {
     const redis = new Redis(process.env.REDIS_URL as any);
 
     app.set("trust proxy", 1);
-    app.set("Access-Control-Allow-Credentials", true);
-    app.set("Access-Control-Allow-Origin", process.env.CORS_ORIGIN as string);
-    app.set(
-      "Access-Control-Allow-Headers",
-      "Origin, X-Requested-With, Content-Type, Accept, Authorization, X-HTTP-Method-Override, Set-Cookie, Cookie"
-    );
-    app.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
+    // app.set("Access-Control-Allow-Credentials", true);
+    // app.set("Access-Control-Allow-Origin", process.env.CORS_ORIGIN as string);
+    // app.set(
+    //   "Access-Control-Allow-Headers",
+    //   "Origin, X-Requested-With, Content-Type, Accept, Authorization, X-HTTP-Method-Override, Set-Cookie, Cookie"
+    // );
+    // app.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
 
     const corsOptions = {
       // add for apollo studio
@@ -68,9 +65,10 @@ const main = async () => {
         }),
         cookie: {
           maxAge: 1000 * 60 * 60 * 24, // 24 hours
-          httpOnly: false,
-          sameSite: "lax", // csrf protection
+          httpOnly: true,
+          sameSite: __prod__ ? "none" : "lax", // csrf protection
           secure: __prod__,
+          // domain: __prod__ ? ".wagon-garden-manager.shop" : undefined,
         },
         saveUninitialized: false,
         secret: process.env.SESSION_SECRET,

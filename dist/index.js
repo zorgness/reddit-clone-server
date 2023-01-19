@@ -58,9 +58,10 @@ const main = async () => {
             }),
             cookie: {
                 maxAge: 1000 * 60 * 60 * 24,
-                httpOnly: false,
-                sameSite: "lax",
+                httpOnly: true,
+                sameSite: constants_1.__prod__ ? "none" : "lax",
                 secure: constants_1.__prod__,
+                domain: constants_1.__prod__ ? ".wagon-garden-manager.shop" : undefined,
             },
             saveUninitialized: false,
             secret: process.env.SESSION_SECRET,
