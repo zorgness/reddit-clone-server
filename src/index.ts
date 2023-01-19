@@ -38,7 +38,10 @@ const main = async () => {
 
     let RedisStore = connectRedis(session);
 
-    const redis = new Redis({ port: 6379, host: "127.0.0.1" });
+    const redis = new Redis({
+      port: parseInt(process.env.REDIS_PORT as string),
+      host: process.env.REDIS_URL,
+    });
 
     app.set("trust proxy", 1);
 
@@ -59,9 +62,9 @@ const main = async () => {
         cookie: {
           maxAge: 1000 * 60 * 60 * 24, // 24 hours
           httpOnly: true,
-          sameSite: __prod__ ? "none" : "lax", // csrf protection
+          sameSite: "lax", // csrf protection
           secure: __prod__,
-          // domain: __prod__ ? ".wagon-garden-manager.shop" : undefined,
+          domain: __prod__ ? ".mini-reddit.fun" : undefined,
         },
         saveUninitialized: false,
         secret: process.env.SESSION_SECRET,

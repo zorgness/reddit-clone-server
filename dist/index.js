@@ -36,7 +36,10 @@ const main = async () => {
         });
         const app = (0, express_1.default)();
         let RedisStore = (0, connect_redis_1.default)(session);
-        const redis = new ioredis_1.default({ port: 6379, host: "127.0.0.1" });
+        const redis = new ioredis_1.default({
+            port: parseInt(process.env.REDIS_PORT),
+            host: process.env.REDIS_URL,
+        });
         app.set("trust proxy", 1);
         const corsOptions = {
             origin: [process.env.CORS_ORIGIN],
@@ -52,8 +55,9 @@ const main = async () => {
             cookie: {
                 maxAge: 1000 * 60 * 60 * 24,
                 httpOnly: true,
-                sameSite: constants_1.__prod__ ? "none" : "lax",
+                sameSite: "lax",
                 secure: constants_1.__prod__,
+                domain: constants_1.__prod__ ? ".mini-reddit.fun" : undefined,
             },
             saveUninitialized: false,
             secret: process.env.SESSION_SECRET,
