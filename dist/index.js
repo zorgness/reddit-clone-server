@@ -24,6 +24,7 @@ const Updoot_1 = require("./entities/Updoot");
 const createUserLoader_1 = require("./utils/createUserLoader");
 const createUpdooLoader_1 = require("./utils/createUpdooLoader");
 const main = async () => {
+    var _a;
     const session = require("express-session");
     try {
         await (0, typeorm_1.createConnection)({
@@ -36,10 +37,13 @@ const main = async () => {
         });
         const app = (0, express_1.default)();
         let RedisStore = (0, connect_redis_1.default)(session);
-        const redis = new ioredis_1.default({
-            port: parseInt(process.env.REDIS_PORT),
-            host: process.env.REDIS_URL,
-        });
+        const redisUrl = (_a = process.env.REDIS_URL) === null || _a === void 0 ? void 0 : _a.split(":");
+        const redis = new ioredis_1.default(constants_1.__prod__
+            ? process.env.REDIS_URL
+            : {
+                port: parseInt(redisUrl === null || redisUrl === void 0 ? void 0 : redisUrl[1]),
+                host: redisUrl === null || redisUrl === void 0 ? void 0 : redisUrl[0],
+            });
         app.set("trust proxy", 1);
         const corsOptions = {
             origin: [process.env.CORS_ORIGIN],

@@ -38,10 +38,16 @@ const main = async () => {
 
     let RedisStore = connectRedis(session);
 
-    const redis = new Redis({
-      port: parseInt(process.env.REDIS_PORT as string),
-      host: process.env.REDIS_URL,
-    });
+    const redisUrl = process.env.REDIS_URL?.split(":");
+
+    const redis = new Redis(
+      __prod__
+        ? (process.env.REDIS_URL as any)
+        : {
+            port: parseInt(redisUrl?.[1] as string),
+            host: redisUrl?.[0] as string,
+          }
+    );
 
     app.set("trust proxy", 1);
 
