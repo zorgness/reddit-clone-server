@@ -99,11 +99,16 @@ let PostResolver = class PostResolver {
     json_build_object(
       '_id', u._id,
       'username', u.username) creator,
+      json_build_object(
+        '_id', c._id,
+        'title', c.title
+      ) category,
       ${req.session.userId
             ? `(select value from updoot where "userId" = $2 and "postId" = p._id) "voteStatus"`
             : "null as voteStatus"}
     from post p
     inner join public.user u on u._id = p."creatorId"
+    inner join category c on c._id = p."categoryId"
     ${cursor ? `where p."createdAt" < $${cursorIndex}` : ""}
     order by p."createdAt" DESC
     limit $1
