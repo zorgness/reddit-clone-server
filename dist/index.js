@@ -23,6 +23,7 @@ const user_1 = require("./resolvers/user");
 const Updoot_1 = require("./entities/Updoot");
 const createUserLoader_1 = require("./utils/createUserLoader");
 const createUpdooLoader_1 = require("./utils/createUpdooLoader");
+const Category_1 = require("./entities/Category");
 const main = async () => {
     var _a;
     const session = require("express-session");
@@ -33,7 +34,7 @@ const main = async () => {
             migrations: [path_1.default.join(__dirname, "./migrations/*")],
             logging: true,
             synchronize: !constants_1.__prod__,
-            entities: [Post_1.Post, User_1.User, Updoot_1.Updoot],
+            entities: [Post_1.Post, User_1.User, Updoot_1.Updoot, Category_1.Category],
         });
         const app = (0, express_1.default)();
         let RedisStore = (0, connect_redis_1.default)(session);

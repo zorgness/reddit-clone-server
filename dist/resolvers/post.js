@@ -28,6 +28,10 @@ __decorate([
     (0, type_graphql_1.Field)(),
     __metadata("design:type", String)
 ], PostInput.prototype, "text", void 0);
+__decorate([
+    (0, type_graphql_1.Field)(),
+    __metadata("design:type", Number)
+], PostInput.prototype, "categoryId", void 0);
 PostInput = __decorate([
     (0, type_graphql_1.InputType)()
 ], PostInput);

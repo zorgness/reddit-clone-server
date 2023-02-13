@@ -24,6 +24,8 @@ class PostInput {
   title: string;
   @Field()
   text: string;
+  @Field()
+  categoryId: number;
 }
 
 @ObjectType()

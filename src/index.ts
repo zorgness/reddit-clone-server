@@ -18,6 +18,7 @@ import { UserResolver } from "./resolvers/user";
 import { Updoot } from "./entities/Updoot";
 import { createUserLoader } from "./utils/createUserLoader";
 import { createUpdootLoader } from "./utils/createUpdooLoader";
+import { Category } from "./entities/Category";
 
 const main = async () => {
   const session = require("express-session");
@@ -29,7 +30,7 @@ const main = async () => {
       migrations: [path.join(__dirname, "./migrations/*")],
       logging: true,
       synchronize: !__prod__,
-      entities: [Post, User, Updoot],
+      entities: [Post, User, Updoot, Category],
     });
 
     // await conn.runMigrations();
