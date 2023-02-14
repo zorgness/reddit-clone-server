@@ -59,22 +59,22 @@ export class PostResolver {
 
   // MODOIFY THE ORDER OF POST DEPENDS ON VOTE
   //
-  // @FieldResolver(() => Int, { nullable: true })
-  // async voteStatus(
-  //   @Root() post: Post,
-  //   @Ctx() { updootLoader, req }: MyContext
-  // ) {
-  //   if (!req.session.userId) {
-  //     return null;
-  //   }
+  @FieldResolver(() => Int, { nullable: true })
+  async voteStatus(
+    @Root() post: Post,
+    @Ctx() { updootLoader, req }: MyContext
+  ) {
+    if (!req.session.userId) {
+      return null;
+    }
 
-  //   const updoot = await updootLoader.load({
-  //     postId: post._id,
-  //     userId: req.session.userId,
-  //   });
+    const updoot = await updootLoader.load({
+      postId: post._id,
+      userId: req.session.userId,
+    });
 
-  //   return updoot ? updoot.value : null;
-  // }
+    return updoot ? updoot.value : null;
+  }
 
   @Mutation(() => Boolean)
   @UseMiddleware(isAuth)
@@ -131,6 +131,7 @@ export class PostResolver {
 
   @Query(() => PaginatedPosts)
   async posts(
+    @Arg("categoryId", () => Int, { nullable: true }) categoryId: number | null,
     @Arg("limit", () => Int) limit: number,
     @Arg("cursor", () => String, { nullable: true }) cursor: string | null,
     @Ctx() { req }: MyContext
@@ -181,6 +182,9 @@ export class PostResolver {
     inner join public.user u on u._id = p."creatorId"
     inner join category c on c._id = p."categoryId"
     ${cursor ? `where p."createdAt" < $${cursorIndex}` : ""}
+    ${cursor && categoryId ? "and" : ""}
+    ${!cursor && categoryId ? "where" : ""}
+    ${categoryId ? `p."categoryId" = ${categoryId}` : ""}
     order by p."createdAt" DESC
     limit $1
     `,
@@ -220,16 +224,21 @@ export class PostResolver {
     @Arg("_id") _id: number,
     @Arg("title", () => String, { nullable: true }) title: string,
     @Arg("text", () => String, { nullable: true }) text: string,
+    @Arg("categoryId", () => Number, { nullable: true }) categoryId: number,
     @Ctx() { req }: MyContext
   ): Promise<Post | null> {
     const result = await getConnection()
       .createQueryBuilder()
       .update(Post)
-      .set({ title, text })
-      .where('_id = :_id and "creatorId" = :creatorId', {
-        _id,
-        creatorId: req.session.userId,
-      })
+      .set({ title, text, categoryId })
+      .where(
+        '_id = :_id and "creatorId" = :creatorId and "categoryId" = :categoryId',
+        {
+          _id,
+          creatorId: req.session.userId,
+          categoryId,
+        }
+      )
       .returning("*")
       .execute();
 
