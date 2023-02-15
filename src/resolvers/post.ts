@@ -36,6 +36,12 @@ class PaginatedPosts {
   hasMore: boolean;
 }
 
+@ObjectType()
+class CategoryPosts {
+  @Field(() => [Post])
+  posts: Post[];
+}
+
 // @Resolver is used as Controller in Symfony
 // cursor give the position
 // limit is the number of posts after the cursor
@@ -131,11 +137,11 @@ export class PostResolver {
 
   @Query(() => PaginatedPosts)
   async posts(
-    @Arg("categoryId", () => Int, { nullable: true }) categoryId: number | null,
     @Arg("limit", () => Int) limit: number,
     @Arg("cursor", () => String, { nullable: true }) cursor: string | null,
     @Ctx() { req }: MyContext
   ): Promise<PaginatedPosts> {
+    console.log("posts");
     const realLimit = Math.min(50, limit);
 
     const realLimitPlusOne = realLimit + 1;
@@ -182,9 +188,6 @@ export class PostResolver {
     inner join public.user u on u._id = p."creatorId"
     inner join category c on c._id = p."categoryId"
     ${cursor ? `where p."createdAt" < $${cursorIndex}` : ""}
-    ${cursor && categoryId ? "and" : ""}
-    ${!cursor && categoryId ? "where" : ""}
-    ${categoryId ? `p."categoryId" = ${categoryId}` : ""}
     order by p."createdAt" DESC
     limit $1
     `,
@@ -195,6 +198,42 @@ export class PostResolver {
       posts: posts.slice(0, realLimit),
       hasMore: posts.length === realLimitPlusOne,
     };
+  }
+
+  @Query(() => CategoryPosts)
+  async postsByCategory(
+    @Arg("categoryId", () => Int) categoryId: number,
+    @Ctx() { req }: MyContext
+  ) {
+    const replacements: any[] = [];
+    if (req.session.userId) {
+      replacements.push(req.session.userId);
+    }
+    const posts = await getConnection().query(
+      `
+    select p.*,
+    json_build_object(
+      '_id', u._id,
+      'username', u.username) creator,
+      json_build_object(
+        '_id', c._id,
+        'title', c.title
+      ) category,
+      ${
+        req.session.userId
+          ? `(select value from updoot where "userId" = $1 and "postId" = p._id) "voteStatus"`
+          : "null as voteStatus"
+      }
+    from post p
+    inner join public.user u on u._id = p."creatorId"
+    inner join category c on c._id = p."categoryId"
+    ${categoryId ? `where p."categoryId" = ${categoryId}` : ""}
+    order by p."createdAt" DESC
+
+    `,
+      replacements
+    );
+    return { posts: posts };
   }
 
   @Query(() => Post, { nullable: true })

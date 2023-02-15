@@ -48,6 +48,15 @@ __decorate([
 PaginatedPosts = __decorate([
     (0, type_graphql_1.ObjectType)()
 ], PaginatedPosts);
+let CategoryPosts = class CategoryPosts {
+};
+__decorate([
+    (0, type_graphql_1.Field)(() => [Post_1.Post]),
+    __metadata("design:type", Array)
+], CategoryPosts.prototype, "posts", void 0);
+CategoryPosts = __decorate([
+    (0, type_graphql_1.ObjectType)()
+], CategoryPosts);
 let PostResolver = class PostResolver {
     textSnippet(post) {
         return post.text.slice(0, 50);
@@ -92,7 +101,8 @@ let PostResolver = class PostResolver {
         }
         return true;
     }
-    async posts(categoryId, limit, cursor, { req }) {
+    async posts(limit, cursor, { req }) {
+        console.log("posts");
         const realLimit = Math.min(50, limit);
         const realLimitPlusOne = realLimit + 1;
         const replacements = [realLimitPlusOne];
@@ -120,9 +130,6 @@ let PostResolver = class PostResolver {
     inner join public.user u on u._id = p."creatorId"
     inner join category c on c._id = p."categoryId"
     ${cursor ? `where p."createdAt" < $${cursorIndex}` : ""}
-    ${cursor && categoryId ? "and" : ""}
-    ${!cursor && categoryId ? "where" : ""}
-    ${categoryId ? `p."categoryId" = ${categoryId}` : ""}
     order by p."createdAt" DESC
     limit $1
     `, replacements);
@@ -130,6 +137,32 @@ let PostResolver = class PostResolver {
             posts: posts.slice(0, realLimit),
             hasMore: posts.length === realLimitPlusOne,
         };
+    }
+    async postsByCategory(categoryId, { req }) {
+        const replacements = [];
+        if (req.session.userId) {
+            replacements.push(req.session.userId);
+        }
+        const posts = await (0, typeorm_1.getConnection)().query(`
+    select p.*,
+    json_build_object(
+      '_id', u._id,
+      'username', u.username) creator,
+      json_build_object(
+        '_id', c._id,
+        'title', c.title
+      ) category,
+      ${req.session.userId
+            ? `(select value from updoot where "userId" = $1 and "postId" = p._id) "voteStatus"`
+            : "null as voteStatus"}
+    from post p
+    inner join public.user u on u._id = p."creatorId"
+    inner join category c on c._id = p."categoryId"
+    ${categoryId ? `where p."categoryId" = ${categoryId}` : ""}
+    order by p."createdAt" DESC
+
+    `, replacements);
+        return { posts: posts };
     }
     async post(_id) {
         const post = await Post_1.Post.findOne({
@@ -193,14 +226,21 @@ __decorate([
 ], PostResolver.prototype, "vote", null);
 __decorate([
     (0, type_graphql_1.Query)(() => PaginatedPosts),
-    __param(0, (0, type_graphql_1.Arg)("categoryId", () => type_graphql_1.Int, { nullable: true })),
-    __param(1, (0, type_graphql_1.Arg)("limit", () => type_graphql_1.Int)),
-    __param(2, (0, type_graphql_1.Arg)("cursor", () => String, { nullable: true })),
-    __param(3, (0, type_graphql_1.Ctx)()),
+    __param(0, (0, type_graphql_1.Arg)("limit", () => type_graphql_1.Int)),
+    __param(1, (0, type_graphql_1.Arg)("cursor", () => String, { nullable: true })),
+    __param(2, (0, type_graphql_1.Ctx)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Number, Object, Object]),
+    __metadata("design:paramtypes", [Number, Object, Object]),
     __metadata("design:returntype", Promise)
 ], PostResolver.prototype, "posts", null);
+__decorate([
+    (0, type_graphql_1.Query)(() => CategoryPosts),
+    __param(0, (0, type_graphql_1.Arg)("categoryId", () => type_graphql_1.Int)),
+    __param(1, (0, type_graphql_1.Ctx)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:returntype", Promise)
+], PostResolver.prototype, "postsByCategory", null);
 __decorate([
     (0, type_graphql_1.Query)(() => Post_1.Post, { nullable: true }),
     __param(0, (0, type_graphql_1.Arg)("_id", () => type_graphql_1.Int)),
