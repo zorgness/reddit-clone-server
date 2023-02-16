@@ -28,6 +28,10 @@ __decorate([
     (0, type_graphql_1.Field)(),
     __metadata("design:type", String)
 ], PostInput.prototype, "text", void 0);
+__decorate([
+    (0, type_graphql_1.Field)(),
+    __metadata("design:type", Number)
+], PostInput.prototype, "categoryId", void 0);
 PostInput = __decorate([
     (0, type_graphql_1.InputType)()
 ], PostInput);
@@ -44,9 +48,28 @@ __decorate([
 PaginatedPosts = __decorate([
     (0, type_graphql_1.ObjectType)()
 ], PaginatedPosts);
+let CategoryPosts = class CategoryPosts {
+};
+__decorate([
+    (0, type_graphql_1.Field)(() => [Post_1.Post]),
+    __metadata("design:type", Array)
+], CategoryPosts.prototype, "posts", void 0);
+CategoryPosts = __decorate([
+    (0, type_graphql_1.ObjectType)()
+], CategoryPosts);
 let PostResolver = class PostResolver {
     textSnippet(post) {
         return post.text.slice(0, 50);
+    }
+    async voteStatus(post, { updootLoader, req }) {
+        if (!req.session.userId) {
+            return null;
+        }
+        const updoot = await updootLoader.load({
+            postId: post._id,
+            userId: req.session.userId,
+        });
+        return updoot ? updoot.value : null;
     }
     async vote(postId, value, { req }) {
         const isUpdoot = value !== -1;
@@ -79,6 +102,7 @@ let PostResolver = class PostResolver {
         return true;
     }
     async posts(limit, cursor, { req }) {
+        console.log("posts");
         const realLimit = Math.min(50, limit);
         const realLimitPlusOne = realLimit + 1;
         const replacements = [realLimitPlusOne];
@@ -95,11 +119,16 @@ let PostResolver = class PostResolver {
     json_build_object(
       '_id', u._id,
       'username', u.username) creator,
+      json_build_object(
+        '_id', c._id,
+        'title', c.title
+      ) category,
       ${req.session.userId
             ? `(select value from updoot where "userId" = $2 and "postId" = p._id) "voteStatus"`
             : "null as voteStatus"}
     from post p
     inner join public.user u on u._id = p."creatorId"
+    inner join category c on c._id = p."categoryId"
     ${cursor ? `where p."createdAt" < $${cursorIndex}` : ""}
     order by p."createdAt" DESC
     limit $1
@@ -108,6 +137,32 @@ let PostResolver = class PostResolver {
             posts: posts.slice(0, realLimit),
             hasMore: posts.length === realLimitPlusOne,
         };
+    }
+    async postsByCategory(categoryId, { req }) {
+        const replacements = [];
+        if (req.session.userId) {
+            replacements.push(req.session.userId);
+        }
+        const posts = await (0, typeorm_1.getConnection)().query(`
+    select p.*,
+    json_build_object(
+      '_id', u._id,
+      'username', u.username) creator,
+      json_build_object(
+        '_id', c._id,
+        'title', c.title
+      ) category,
+      ${req.session.userId
+            ? `(select value from updoot where "userId" = $1 and "postId" = p._id) "voteStatus"`
+            : "null as voteStatus"}
+    from post p
+    inner join public.user u on u._id = p."creatorId"
+    inner join category c on c._id = p."categoryId"
+    ${categoryId ? `where p."categoryId" = ${categoryId}` : ""}
+    order by p."createdAt" DESC
+
+    `, replacements);
+        return { posts: posts };
     }
     async post(_id) {
         const post = await Post_1.Post.findOne({
@@ -118,14 +173,15 @@ let PostResolver = class PostResolver {
     async createPost(input, { req }) {
         return Post_1.Post.create(Object.assign(Object.assign({}, input), { creatorId: req.session.userId })).save();
     }
-    async updatePost(_id, title, text, { req }) {
+    async updatePost(_id, title, text, categoryId, { req }) {
         const result = await (0, typeorm_1.getConnection)()
             .createQueryBuilder()
             .update(Post_1.Post)
-            .set({ title, text })
-            .where('_id = :_id and "creatorId" = :creatorId', {
+            .set({ title, text, categoryId })
+            .where('_id = :_id and "creatorId" = :creatorId and "categoryId" = :categoryId', {
             _id,
             creatorId: req.session.userId,
+            categoryId,
         })
             .returning("*")
             .execute();
@@ -151,6 +207,14 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], PostResolver.prototype, "textSnippet", null);
 __decorate([
+    (0, type_graphql_1.FieldResolver)(() => type_graphql_1.Int, { nullable: true }),
+    __param(0, (0, type_graphql_1.Root)()),
+    __param(1, (0, type_graphql_1.Ctx)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Post_1.Post, Object]),
+    __metadata("design:returntype", Promise)
+], PostResolver.prototype, "voteStatus", null);
+__decorate([
     (0, type_graphql_1.Mutation)(() => Boolean),
     (0, type_graphql_1.UseMiddleware)(isAuth_1.isAuth),
     __param(0, (0, type_graphql_1.Arg)("postId", () => type_graphql_1.Int)),
@@ -169,6 +233,14 @@ __decorate([
     __metadata("design:paramtypes", [Number, Object, Object]),
     __metadata("design:returntype", Promise)
 ], PostResolver.prototype, "posts", null);
+__decorate([
+    (0, type_graphql_1.Query)(() => CategoryPosts),
+    __param(0, (0, type_graphql_1.Arg)("categoryId", () => type_graphql_1.Int)),
+    __param(1, (0, type_graphql_1.Ctx)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:returntype", Promise)
+], PostResolver.prototype, "postsByCategory", null);
 __decorate([
     (0, type_graphql_1.Query)(() => Post_1.Post, { nullable: true }),
     __param(0, (0, type_graphql_1.Arg)("_id", () => type_graphql_1.Int)),
@@ -191,9 +263,10 @@ __decorate([
     __param(0, (0, type_graphql_1.Arg)("_id")),
     __param(1, (0, type_graphql_1.Arg)("title", () => String, { nullable: true })),
     __param(2, (0, type_graphql_1.Arg)("text", () => String, { nullable: true })),
-    __param(3, (0, type_graphql_1.Ctx)()),
+    __param(3, (0, type_graphql_1.Arg)("categoryId", () => Number, { nullable: true })),
+    __param(4, (0, type_graphql_1.Ctx)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, String, String, Object]),
+    __metadata("design:paramtypes", [Number, String, String, Number, Object]),
     __metadata("design:returntype", Promise)
 ], PostResolver.prototype, "updatePost", null);
 __decorate([

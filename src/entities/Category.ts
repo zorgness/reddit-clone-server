@@ -9,11 +9,10 @@ import {
   OneToMany,
 } from "typeorm";
 import { Post } from "./Post";
-import { Updoot } from "./Updoot";
 
 @ObjectType()
 @Entity()
-export class User extends BaseEntity {
+export class Category extends BaseEntity {
   @Field(() => Int)
   @PrimaryGeneratedColumn()
   _id!: number;
@@ -29,18 +28,8 @@ export class User extends BaseEntity {
 
   @Field(() => String)
   @Column({ unique: true })
-  username!: string;
+  title!: string;
 
-  @Field(() => String)
-  @Column({ unique: true })
-  email!: string;
-
-  @Column()
-  password!: string;
-
-  @OneToMany(() => Updoot, (updoot) => updoot.user)
-  updoots: Updoot[];
-
-  @OneToMany(() => Post, (post) => post.creator)
+  @OneToMany(() => Post, (post) => post.category)
   posts: Post[];
 }

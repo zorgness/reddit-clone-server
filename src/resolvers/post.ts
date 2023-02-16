@@ -24,6 +24,8 @@ class PostInput {
   title: string;
   @Field()
   text: string;
+  @Field()
+  categoryId: number;
 }
 
 @ObjectType()
@@ -32,6 +34,12 @@ class PaginatedPosts {
   posts: Post[];
   @Field()
   hasMore: boolean;
+}
+
+@ObjectType()
+class CategoryPosts {
+  @Field(() => [Post])
+  posts: Post[];
 }
 
 // @Resolver is used as Controller in Symfony
@@ -57,22 +65,22 @@ export class PostResolver {
 
   // MODOIFY THE ORDER OF POST DEPENDS ON VOTE
   //
-  // @FieldResolver(() => Int, { nullable: true })
-  // async voteStatus(
-  //   @Root() post: Post,
-  //   @Ctx() { updootLoader, req }: MyContext
-  // ) {
-  //   if (!req.session.userId) {
-  //     return null;
-  //   }
+  @FieldResolver(() => Int, { nullable: true })
+  async voteStatus(
+    @Root() post: Post,
+    @Ctx() { updootLoader, req }: MyContext
+  ) {
+    if (!req.session.userId) {
+      return null;
+    }
 
-  //   const updoot = await updootLoader.load({
-  //     postId: post._id,
-  //     userId: req.session.userId,
-  //   });
+    const updoot = await updootLoader.load({
+      postId: post._id,
+      userId: req.session.userId,
+    });
 
-  //   return updoot ? updoot.value : null;
-  // }
+    return updoot ? updoot.value : null;
+  }
 
   @Mutation(() => Boolean)
   @UseMiddleware(isAuth)
@@ -133,6 +141,7 @@ export class PostResolver {
     @Arg("cursor", () => String, { nullable: true }) cursor: string | null,
     @Ctx() { req }: MyContext
   ): Promise<PaginatedPosts> {
+    console.log("posts");
     const realLimit = Math.min(50, limit);
 
     const realLimitPlusOne = realLimit + 1;
@@ -166,6 +175,10 @@ export class PostResolver {
     json_build_object(
       '_id', u._id,
       'username', u.username) creator,
+      json_build_object(
+        '_id', c._id,
+        'title', c.title
+      ) category,
       ${
         req.session.userId
           ? `(select value from updoot where "userId" = $2 and "postId" = p._id) "voteStatus"`
@@ -173,6 +186,7 @@ export class PostResolver {
       }
     from post p
     inner join public.user u on u._id = p."creatorId"
+    inner join category c on c._id = p."categoryId"
     ${cursor ? `where p."createdAt" < $${cursorIndex}` : ""}
     order by p."createdAt" DESC
     limit $1
@@ -184,6 +198,42 @@ export class PostResolver {
       posts: posts.slice(0, realLimit),
       hasMore: posts.length === realLimitPlusOne,
     };
+  }
+
+  @Query(() => CategoryPosts)
+  async postsByCategory(
+    @Arg("categoryId", () => Int) categoryId: number,
+    @Ctx() { req }: MyContext
+  ) {
+    const replacements: any[] = [];
+    if (req.session.userId) {
+      replacements.push(req.session.userId);
+    }
+    const posts = await getConnection().query(
+      `
+    select p.*,
+    json_build_object(
+      '_id', u._id,
+      'username', u.username) creator,
+      json_build_object(
+        '_id', c._id,
+        'title', c.title
+      ) category,
+      ${
+        req.session.userId
+          ? `(select value from updoot where "userId" = $1 and "postId" = p._id) "voteStatus"`
+          : "null as voteStatus"
+      }
+    from post p
+    inner join public.user u on u._id = p."creatorId"
+    inner join category c on c._id = p."categoryId"
+    ${categoryId ? `where p."categoryId" = ${categoryId}` : ""}
+    order by p."createdAt" DESC
+
+    `,
+      replacements
+    );
+    return { posts: posts };
   }
 
   @Query(() => Post, { nullable: true })
@@ -213,16 +263,21 @@ export class PostResolver {
     @Arg("_id") _id: number,
     @Arg("title", () => String, { nullable: true }) title: string,
     @Arg("text", () => String, { nullable: true }) text: string,
+    @Arg("categoryId", () => Number, { nullable: true }) categoryId: number,
     @Ctx() { req }: MyContext
   ): Promise<Post | null> {
     const result = await getConnection()
       .createQueryBuilder()
       .update(Post)
-      .set({ title, text })
-      .where('_id = :_id and "creatorId" = :creatorId', {
-        _id,
-        creatorId: req.session.userId,
-      })
+      .set({ title, text, categoryId })
+      .where(
+        '_id = :_id and "creatorId" = :creatorId and "categoryId" = :categoryId',
+        {
+          _id,
+          creatorId: req.session.userId,
+          categoryId,
+        }
+      )
       .returning("*")
       .execute();
 

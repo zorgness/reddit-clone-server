@@ -11,6 +11,7 @@ import {
 import { Field, ObjectType, Int } from "type-graphql";
 import { User } from "./User";
 import { Updoot } from "./Updoot";
+import { Category } from "./Category";
 
 // BaseEntity is an class abstraction to help run sql requests
 
@@ -50,8 +51,16 @@ export class Post extends BaseEntity {
   creatorId: number;
 
   @Field()
+  @Column()
+  categoryId: number;
+
+  @Field()
   @ManyToOne(() => User, (user) => user.posts, { eager: true })
   creator: User;
+
+  @Field()
+  @ManyToOne(() => Category, (category) => category.posts, { eager: true })
+  category: Category;
 
   @OneToMany(() => Updoot, (updoot) => updoot.post)
   updoots: Updoot[];

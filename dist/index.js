@@ -23,18 +23,21 @@ const user_1 = require("./resolvers/user");
 const Updoot_1 = require("./entities/Updoot");
 const createUserLoader_1 = require("./utils/createUserLoader");
 const createUpdooLoader_1 = require("./utils/createUpdooLoader");
+const Category_1 = require("./entities/Category");
+const category_1 = require("./resolvers/category");
 const main = async () => {
     var _a;
     const session = require("express-session");
     try {
-        await (0, typeorm_1.createConnection)({
+        const conn = await (0, typeorm_1.createConnection)({
             type: "postgres",
             url: process.env.DATABASE_URL,
             migrations: [path_1.default.join(__dirname, "./migrations/*")],
             logging: true,
             synchronize: !constants_1.__prod__,
-            entities: [Post_1.Post, User_1.User, Updoot_1.Updoot],
+            entities: [Post_1.Post, User_1.User, Updoot_1.Updoot, Category_1.Category],
         });
+        await conn.runMigrations();
         const app = (0, express_1.default)();
         let RedisStore = (0, connect_redis_1.default)(session);
         const redisUrl = (_a = process.env.REDIS_URL) === null || _a === void 0 ? void 0 : _a.split(":");
@@ -72,7 +75,12 @@ const main = async () => {
         });
         const apolloServer = new apollo_server_express_1.ApolloServer({
             schema: await (0, type_graphql_1.buildSchema)({
-                resolvers: [hello_1.HelloResolver, post_1.PostResolver, user_1.UserResolver],
+                resolvers: [
+                    hello_1.HelloResolver,
+                    post_1.PostResolver,
+                    user_1.UserResolver,
+                    category_1.CategoryResolver,
+                ],
                 validate: false,
             }),
             plugins: [
