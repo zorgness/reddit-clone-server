@@ -72,7 +72,7 @@ __decorate([
     __metadata("design:type", User_1.User)
 ], Post.prototype, "creator", void 0);
 __decorate([
-    (0, type_graphql_1.Field)(),
+    (0, type_graphql_1.Field)(() => Category_1.Category),
     (0, typeorm_1.ManyToOne)(() => Category_1.Category, (category) => category.posts, { eager: true }),
     __metadata("design:type", Category_1.Category)
 ], Post.prototype, "category", void 0);

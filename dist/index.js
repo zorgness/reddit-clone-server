@@ -34,7 +34,7 @@ const main = async () => {
             url: process.env.DATABASE_URL,
             migrations: [path_1.default.join(__dirname, "./migrations/*")],
             logging: true,
-            synchronize: !constants_1.__prod__,
+            synchronize: false,
             entities: [Post_1.Post, User_1.User, Updoot_1.Updoot, Category_1.Category],
         });
         await conn.runMigrations();

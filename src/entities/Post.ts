@@ -58,7 +58,7 @@ export class Post extends BaseEntity {
   @ManyToOne(() => User, (user) => user.posts, { eager: true })
   creator: User;
 
-  @Field()
+  @Field(() => Category)
   @ManyToOne(() => Category, (category) => category.posts, { eager: true })
   category: Category;
 
