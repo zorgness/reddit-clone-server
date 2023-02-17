@@ -1,6 +1,6 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
-export class CategoryData1676310761316 implements MigrationInterface {
+export class CategoryData1676610761316 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
       `insert into category (title) values ('gamming');

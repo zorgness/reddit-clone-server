@@ -29,7 +29,7 @@ const main = async () => {
     var _a;
     const session = require("express-session");
     try {
-        const conn = await (0, typeorm_1.createConnection)({
+        await (0, typeorm_1.createConnection)({
             type: "postgres",
             url: process.env.DATABASE_URL,
             migrations: [path_1.default.join(__dirname, "./migrations/*")],
@@ -37,7 +37,6 @@ const main = async () => {
             synchronize: false,
             entities: [Post_1.Post, User_1.User, Updoot_1.Updoot, Category_1.Category],
         });
-        await conn.runMigrations();
         const app = (0, express_1.default)();
         let RedisStore = (0, connect_redis_1.default)(session);
         const redisUrl = (_a = process.env.REDIS_URL) === null || _a === void 0 ? void 0 : _a.split(":");

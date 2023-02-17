@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CategoryData1676310761316 = void 0;
-class CategoryData1676310761316 {
+exports.CategoryData1676610761316 = void 0;
+class CategoryData1676610761316 {
     async up(queryRunner) {
         await queryRunner.query(`insert into category (title) values ('gamming');
         insert into category (title) values ('sports');
@@ -13,5 +13,5 @@ class CategoryData1676310761316 {
     }
     async down(_) { }
 }
-exports.CategoryData1676310761316 = CategoryData1676310761316;
-//# sourceMappingURL=1676310761310-CategoryData.js.map
+exports.CategoryData1676610761316 = CategoryData1676610761316;
+//# sourceMappingURL=1676610761310-CategoryData.js.map

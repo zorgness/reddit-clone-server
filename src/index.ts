@@ -25,7 +25,7 @@ const main = async () => {
   const session = require("express-session");
 
   try {
-    const conn = await createConnection({
+    await createConnection({
       type: "postgres",
       url: process.env.DATABASE_URL,
       migrations: [path.join(__dirname, "./migrations/*")],
@@ -35,7 +35,7 @@ const main = async () => {
       entities: [Post, User, Updoot, Category],
     });
 
-    await conn.runMigrations();
+    // await conn.runMigrations();
 
     const app = express();
 
