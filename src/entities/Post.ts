@@ -12,6 +12,7 @@ import { Field, ObjectType, Int } from "type-graphql";
 import { User } from "./User";
 import { Updoot } from "./Updoot";
 import { Category } from "./Category";
+import { Comment } from "./Comment";
 
 // BaseEntity is an class abstraction to help run sql requests
 
@@ -64,4 +65,7 @@ export class Post extends BaseEntity {
 
   @OneToMany(() => Updoot, (updoot) => updoot.post)
   updoots: Updoot[];
+
+  // @OneToMany(() => Comment, (comment) => comment.post)
+  // comments: Comment[];
 }
