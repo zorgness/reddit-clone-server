@@ -66,6 +66,6 @@ export class Post extends BaseEntity {
   @OneToMany(() => Updoot, (updoot) => updoot.post)
   updoots: Updoot[];
 
-  // @OneToMany(() => Comment, (comment) => comment.post)
-  // comments: Comment[];
+  @OneToMany(() => Comment, (comment) => comment.post)
+  comments: Comment[];
 }

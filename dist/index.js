@@ -17,6 +17,7 @@ const typeorm_1 = require("typeorm");
 const constants_1 = require("./constants");
 const Post_1 = require("./entities/Post");
 const User_1 = require("./entities/User");
+const Comment_1 = require("./entities/Comment");
 const hello_1 = require("./resolvers/hello");
 const post_1 = require("./resolvers/post");
 const user_1 = require("./resolvers/user");
@@ -34,8 +35,8 @@ const main = async () => {
             url: process.env.DATABASE_URL,
             migrations: [path_1.default.join(__dirname, "./migrations/*")],
             logging: true,
-            synchronize: false,
-            entities: [Post_1.Post, User_1.User, Updoot_1.Updoot, Category_1.Category],
+            synchronize: !constants_1.__prod__,
+            entities: [Post_1.Post, User_1.User, Updoot_1.Updoot, Category_1.Category, Comment_1.Comment],
         });
         const app = (0, express_1.default)();
         let RedisStore = (0, connect_redis_1.default)(session);

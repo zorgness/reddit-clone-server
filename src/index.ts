@@ -12,6 +12,7 @@ import { createConnection } from "typeorm";
 import { COOKIE_NAME, __prod__ } from "./constants";
 import { Post } from "./entities/Post";
 import { User } from "./entities/User";
+import { Comment } from "./entities/Comment";
 import { HelloResolver } from "./resolvers/hello";
 import { PostResolver } from "./resolvers/post";
 import { UserResolver } from "./resolvers/user";
@@ -30,9 +31,9 @@ const main = async () => {
       url: process.env.DATABASE_URL,
       migrations: [path.join(__dirname, "./migrations/*")],
       logging: true,
-      // synchronize: !__prod__,
-      synchronize: false,
-      entities: [Post, User, Updoot, Category],
+      synchronize: !__prod__,
+      //synchronize: false,
+      entities: [Post, User, Updoot, Category, Comment],
     });
 
     // await conn.runMigrations();

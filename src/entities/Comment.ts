@@ -33,4 +33,5 @@ export class Comment extends BaseEntity {
   @Field(() => Post)
   @ManyToOne(() => Post, (post) => post.comments, { eager: true })
   Post: Post;
+  post: any;
 }
